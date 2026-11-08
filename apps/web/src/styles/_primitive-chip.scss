@@ -1,0 +1,177 @@
+.ui-chip {
+  --ui-chip-min-height: var(--control-height-sm);
+  --ui-chip-padding-y: 0.375rem;
+  --ui-chip-padding-x: 0.875rem;
+  --ui-chip-gap: 0.5rem;
+  --ui-chip-font-size: var(--font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: var(--ui-chip-min-height);
+  padding: var(--ui-chip-padding-y) var(--ui-chip-padding-x);
+  border: var(--border-width) var(--border-style) transparent;
+  border-radius: var(--radius-token);
+  background: var(--color-chip-active-surface);
+  background-clip: padding-box;
+  color: var(--color-text-primary);
+  font-size: var(--ui-chip-font-size);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+  gap: var(--ui-chip-gap);
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.ui-chip--interactive {
+  font-family: inherit;
+}
+
+.ui-chip--interactive:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ui-chip--sm {
+  --ui-chip-min-height: 2rem;
+  --ui-chip-padding-y: 0.25rem;
+  --ui-chip-padding-x: 0.75rem;
+  --ui-chip-gap: 0.375rem;
+}
+
+.ui-chip--xs {
+  --ui-chip-min-height: var(--control-height-xs);
+  --ui-chip-padding-y: 0.125rem;
+  --ui-chip-padding-x: 0.4375rem;
+  --ui-chip-gap: 0.25rem;
+  --ui-chip-font-size: var(--font-size-caption);
+}
+
+.ui-chip--md {
+  --ui-chip-min-height: var(--control-height-sm);
+  --ui-chip-padding-y: 0.375rem;
+  --ui-chip-padding-x: 0.875rem;
+  --ui-chip-gap: 0.5rem;
+  --ui-chip-font-size: var(--font-size-sm);
+}
+
+.ui-chip--lg {
+  --ui-chip-min-height: 2.375rem;
+  --ui-chip-padding-y: 0.4375rem;
+  --ui-chip-padding-x: 1rem;
+  --ui-chip-gap: 0.625rem;
+  --ui-chip-font-size: var(--font-size-md);
+}
+
+.ui-chip--neutral.ui-chip--interactive:hover,
+.ui-chip--neutral.ui-chip--selected,
+.ui-chip--neutral.ui-chip--selected.ui-chip--interactive:hover,
+.ui-chip--subtle.ui-chip--interactive:hover,
+.ui-chip--subtle.ui-chip--selected,
+.ui-chip--subtle.ui-chip--selected.ui-chip--interactive:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 68%, white);
+  background: var(--gradient-active-surface);
+  box-shadow:
+    inset 0 0 0 0.0625rem rgb(255 255 255 / 0.78),
+    0 0.5rem 1.25rem rgb(var(--color-primary-rgb) / 0.12);
+  color: var(--color-primary-active);
+}
+
+.ui-chip--primary {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary-soft) 18%, white);
+}
+
+.ui-chip--primary.ui-chip--interactive:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 56%, white);
+  background: color-mix(in srgb, var(--color-primary-soft) 24%, white);
+  color: var(--color-primary-active);
+}
+
+.ui-chip--subtle {
+  border: var(--border-default);
+  background: color-mix(in srgb, var(--color-primary-soft) 18%, white);
+  color: var(--color-text-primary);
+}
+
+.ui-chip--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.ui-chip--ghost.ui-chip--interactive:hover {
+  border-color: var(--color-border);
+  background: var(--color-chip-active-surface);
+  color: var(--color-primary-active);
+}
+
+.ui-chip--interactive:focus-visible {
+  outline: var(--focus-ring-size) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.ui-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  flex: 0 0 auto;
+}
+
+.ui-chip-swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: var(--border-default);
+  border-radius: calc(var(--radius-sm) / 2);
+  box-shadow: inset 0 0 0 0.0625rem rgb(0 0 0 / 0.04);
+  flex: 0 0 auto;
+}
+
+.ui-chip-label {
+  font-size: inherit;
+}
+
+.ui-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--color-text-secondary);
+  font-size: inherit;
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-chip--selected .ui-chip-count,
+.ui-chip--interactive:hover .ui-chip-count {
+  color: currentColor;
+}
+
+.ui-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+.ui-chip-remove:hover {
+  opacity: 0.72;
+}
+
+.ui-chip-remove:focus-visible {
+  outline: var(--focus-ring-size) solid var(--focus-ring-color);
+  outline-offset: 0.125rem;
+  border-radius: var(--radius-pill);
+}

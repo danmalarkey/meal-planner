@@ -1,0 +1,4 @@
+# Meal Planner authenticated app
+
+User-agent: *
+Disallow: /

@@ -1,0 +1,43 @@
+:host {
+  display: inline-grid;
+}
+
+.account-menu-trigger {
+  display: inline-flex;
+  padding: var(--space-1);
+  border: var(--border-width) var(--border-style) transparent;
+  border-radius: var(--radius-control);
+  transition:
+    border-color var(--transition-default) var(--easing-standard),
+    background-color var(--transition-default) var(--easing-standard);
+}
+
+.account-menu-trigger:hover {
+  border-color: var(--color-control-hover-border);
+  background: var(--color-control-hover-surface);
+}
+
+.account-menu-identity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: 0 var(--space-3) var(--space-3);
+  border-bottom: var(--border-default);
+  margin-bottom: var(--space-1);
+}
+
+.account-menu-name,
+.account-menu-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.account-menu-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}

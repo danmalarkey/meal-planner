@@ -1,0 +1,26 @@
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+:host.ui-swatch-host--fill {
+  width: 100%;
+  height: 100%;
+}
+
+.ui-swatch {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.ui-swatch--sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.ui-swatch--fill {
+  width: 100%;
+  height: 100%;
+}

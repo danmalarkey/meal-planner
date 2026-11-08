@@ -1,0 +1,51 @@
+<app-auth-page-frame cardTitle="Sign in to Meal Planner">
+  <form class="auth-form" (submit)="handleSubmit($event)">
+    <ui-input
+      label="Email"
+      type="email"
+      autocomplete="email"
+      [value]="email()"
+      [autofocusTarget]="true"
+      (valueChange)="email.set($event)"
+    ></ui-input>
+
+    <ui-input
+      label="Password"
+      type="password"
+      autocomplete="current-password"
+      [value]="password()"
+      (valueChange)="password.set($event)"
+    ></ui-input>
+
+    @if (auth.authError()) {
+      <p class="auth-feedback auth-feedback--error" role="alert">
+        {{ auth.authError() }}
+      </p>
+    }
+
+    <div class="auth-form-actions">
+      <ui-button
+        type="submit"
+        variant="primary-elevated"
+        size="lg"
+        [fullWidth]="true"
+        [loading]="auth.signingIn()"
+        [loadingLabel]="'Signing in'"
+        [disabled]="!canSubmit()"
+        >
+        Sign in
+      </ui-button>
+      <ui-button
+        variant="ghost"
+        [fullWidth]="true"
+        (clicked)="openForgotPassword()"
+        >
+        Forgot password?
+      </ui-button>
+      <p class="auth-form-secondary">
+        New to Meal Planner?
+        <button type="button" class="auth-text-link" (click)="openSignUp()">Create an account</button>
+      </p>
+    </div>
+  </form>
+</app-auth-page-frame>

@@ -1,0 +1,81 @@
+import { Component } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { RecipeSummary } from '../../core/recipes/recipe-repository.service';
+import { RecipeCardComponent } from './recipe-card.component';
+
+@Component({ template: '' })
+class RecipeDetailTestComponent {}
+
+@Component({
+  imports: [RecipeCardComponent],
+  template: `
+    <app-recipe-card
+      [recipe]="recipe"
+      [selectable]="true"
+      [detailQueryParams]="detailQueryParams"
+      (selectionChange)="selectionCount = selectionCount + 1"
+    ></app-recipe-card>
+  `
+})
+class RecipeCardTestHostComponent {
+  readonly recipe: RecipeSummary = {
+    id: 'recipe-1',
+    title: 'Test meal',
+    minutes: 30,
+    baseServings: 4,
+    imageUrl: null,
+    dietaryAssessment: null
+  };
+  readonly detailQueryParams = {
+    mealPlanEntry: 'entry-1',
+    planWeek: '2026-11-01',
+    returnTo: '/meal-plan'
+  };
+  selectionCount = 0;
+}
+
+describe('RecipeCardComponent', () => {
+  let fixture: ComponentFixture<RecipeCardTestHostComponent>;
+  let router: Router;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [RecipeCardTestHostComponent],
+      providers: [
+        provideRouter([
+          { path: 'meals/:recipeId', component: RecipeDetailTestComponent }
+        ])
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(RecipeCardTestHostComponent);
+    router = TestBed.inject(Router);
+    fixture.detectChanges();
+  });
+
+  it('opens recipe detail when the selectable card content is clicked', async () => {
+    const detailLink = fixture.nativeElement.querySelector(
+      '.recipe-card-detail-link'
+    ) as HTMLAnchorElement;
+
+    detailLink.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe(
+      '/meals/recipe-1?mealPlanEntry=entry-1&planWeek=2026-11-01&returnTo=%2Fmeal-plan'
+    );
+  });
+
+  it('keeps the selection control separate from recipe navigation', async () => {
+    const selection = fixture.nativeElement.querySelector(
+      '.recipe-card-selection'
+    ) as HTMLButtonElement;
+
+    selection.click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.selectionCount).toBe(1);
+    expect(router.url).toBe('/');
+  });
+});

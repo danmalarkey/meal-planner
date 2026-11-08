@@ -1,0 +1,33 @@
+.ui-camera-capture {
+  position: relative;
+  overflow: hidden;
+  min-height: 20rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-text-primary);
+}
+
+.ui-camera-capture__preview {
+  display: block;
+  width: 100%;
+  min-height: 20rem;
+  max-height: 62vh;
+  object-fit: contain;
+}
+
+.ui-camera-capture__message {
+  position: absolute;
+  inset: auto var(--space-4) var(--space-4);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-inverse);
+  background: rgb(10 15 25 / 78%);
+  text-align: center;
+}
+
+@media (max-width: 42rem) {
+  .ui-camera-capture,
+  .ui-camera-capture__preview {
+    min-height: 55vh;
+  }
+}

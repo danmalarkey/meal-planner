@@ -1,0 +1,155 @@
+:host {
+  display: block;
+}
+
+.design-system-page {
+  display: grid;
+  gap: var(--space-7);
+  width: min(100%, 76rem);
+  margin: 0 auto;
+}
+
+.design-system-hero {
+  max-width: 48rem;
+}
+
+.design-system-hero > p:last-child {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.design-system-nav,
+.specimen-row,
+.foundation-samples,
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.design-system-nav {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 2;
+  padding: var(--space-3);
+  border: var(--border-default);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(0.75rem);
+}
+
+.design-system-nav a {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.design-system-nav a:hover,
+.design-system-nav a:focus-visible {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-active);
+}
+
+.design-system-section,
+.specimen-stack,
+.typography-stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.design-system-section {
+  scroll-margin-top: var(--space-8);
+}
+
+.design-system-section > header p,
+.design-system-section > header h2,
+.specimen-card > h3 {
+  margin-bottom: 0;
+}
+
+.specimen-card {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.specimen-grid,
+.color-grid,
+.feature-registry {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+}
+
+.color-swatch {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.color-swatch > span {
+  min-height: 5rem;
+  border: var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.color-swatch code,
+.feature-registry code {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.foundation-samples span {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.icon-grid > span {
+  display: grid;
+  min-width: 5rem;
+  gap: var(--space-1);
+  justify-items: center;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+}
+
+.popover-actions {
+  display: grid;
+  min-width: 12rem;
+  padding: var(--space-2);
+}
+
+.popover-actions button {
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.popover-actions button:hover,
+.popover-actions button:focus-visible {
+  background: var(--color-surface-alt);
+}
+
+@media (max-width: 47.9375rem) {
+  .design-system-nav {
+    position: static;
+  }
+
+  .specimen-card {
+    padding: var(--space-4);
+  }
+}

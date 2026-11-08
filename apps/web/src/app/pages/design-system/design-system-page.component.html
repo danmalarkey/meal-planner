@@ -1,0 +1,88 @@
+<div class="design-system-page">
+  <header class="design-system-hero">
+    <p class="eyebrow">System reference</p>
+    <h1>Meal Planner design system</h1>
+    <p>Foundations, primitives, feature components, and composition patterns retained as the product grows.</p>
+  </header>
+
+  <nav class="design-system-nav" aria-label="Design system sections">
+    <a href="#foundations">Foundations</a>
+    <a href="#primitives">Primitive components</a>
+    <a href="#features">Feature components</a>
+    <a href="#patterns">Patterns</a>
+  </nav>
+
+  <section id="foundations" class="design-system-section">
+    <header><p class="eyebrow">Foundations</p><h2>Visual language</h2></header>
+    <article class="specimen-card">
+      <h3>Colors</h3>
+      <div class="color-grid">
+        @for (color of colors; track color.name) {
+          <div class="color-swatch"><span [style.background]="color.value"></span><strong>{{ color.name }}</strong><code>{{ color.value }}</code></div>
+        }
+      </div>
+    </article>
+    <article class="specimen-card typography-stack">
+      <h3>Typography</h3>
+      <h1>Page heading</h1><h2>Section heading</h2><h3>Card heading</h3>
+      <p>Body copy supports clear, calm planning workflows.</p><small>Supporting text and metadata</small>
+    </article>
+    <article class="specimen-card">
+      <h3>Spacing, radius, and elevation</h3>
+      <div class="foundation-samples"><span>Space scale</span><span>Radius scale</span><span>Shadow scale</span></div>
+    </article>
+  </section>
+
+  <section id="primitives" class="design-system-section">
+    <header><p class="eyebrow">Primitive components</p><h2>Reusable interaction units</h2></header>
+
+    <article class="specimen-card"><h3>Brand</h3><ui-brand size="lg"></ui-brand></article>
+    <article class="specimen-card"><h3>Buttons</h3><div class="specimen-row"><ui-button variant="primary">Save plan</ui-button><ui-button variant="secondary">Cancel</ui-button><ui-button variant="ghost" iconLeading="add">Add meal</ui-button><ui-button variant="destructive">Delete</ui-button></div></article>
+    <article class="specimen-card"><h3>Inputs</h3><div class="specimen-grid"><ui-input label="Recipe name" placeholder="Enter a recipe"></ui-input><ui-input label="Search" type="search" iconLeading="search" placeholder="Search recipes"></ui-input><ui-input label="Servings" type="number" value="4" helperText="Household default"></ui-input></div></article>
+    <article class="specimen-card"><h3>Select</h3><ui-select label="Meal" [options]="selectOptions" [value]="selectValue()" (valueChange)="selectValue.set($event)"></ui-select></article>
+    <article class="specimen-card"><h3>Textarea</h3><ui-textarea label="Notes" placeholder="Add preparation notes" [autoGrow]="true"></ui-textarea></article>
+    <article class="specimen-card"><h3>Checkbox</h3><ui-checkbox label="Add ingredients to the grocery list" [checked]="checked()" (checkedChange)="checked.set($event)"></ui-checkbox></article>
+    <article class="specimen-card"><h3>Radio group</h3><ui-radio-group label="Planning style" [options]="radioOptions" [value]="radioValue()" (valueChange)="radioValue.set($event)"></ui-radio-group></article>
+    <article class="specimen-card"><h3>Toggle</h3><ui-toggle label="Share changes with the household" description="Notify other household members." [checked]="toggled()" (checkedChange)="toggled.set($event)"></ui-toggle></article>
+    <article class="specimen-card"><h3>Segmented control</h3><ui-segmented [items]="segmentedItems" [value]="segmentedValue()" ariaLabel="Planning range" (valueChange)="segmentedValue.set($event)"></ui-segmented></article>
+    <article class="specimen-card"><h3>Card</h3><ui-card title="Weeknight pasta" subtitle="25 minutes" appearance="shadow"><p>A flexible surface for grouped content.</p></ui-card></article>
+    <article class="specimen-card"><h3>Data strip</h3><div class="specimen-grid"><ui-data-strip label="Prep" value="10 min"></ui-data-strip><ui-data-strip label="Cook" value="15 min"></ui-data-strip><ui-data-strip label="Serves" value="4"></ui-data-strip></div></article>
+    <article class="specimen-card"><h3>Tabs</h3><ui-tabs [items]="tabs" [selected]="selectedTab()" ariaLabel="Reference view" (selectedChange)="selectedTab.set($event)"></ui-tabs></article>
+    <article class="specimen-card"><h3>Breadcrumbs</h3><ui-breadcrumbs [items]="breadcrumbs"></ui-breadcrumbs></article>
+    <article class="specimen-card"><h3>Icon button</h3><div class="specimen-row"><ui-icon-button icon="edit" ariaLabel="Edit recipe" tooltip="Edit recipe"></ui-icon-button><ui-icon-button icon="more" ariaLabel="More actions" tooltip="More actions"></ui-icon-button></div></article>
+    <article class="specimen-card"><h3>Popover</h3><ui-popover triggerButtonVariant="secondary" triggerLabel="Open meal actions" panelLabel="Meal actions"><span popover-trigger>Meal actions</span><div popover-panel class="popover-actions"><button type="button">Duplicate</button><button type="button">Move to another day</button></div></ui-popover></article>
+    <article class="specimen-card"><h3>Disclosure</h3><ui-disclosure title="Ingredient substitutions" summary="Optional alternatives"><p>Use the disclosure primitive for supporting detail that can remain collapsed.</p></ui-disclosure></article>
+    <article class="specimen-card"><h3>Chips</h3><div class="specimen-row"><ui-chip label="Vegetarian" [selected]="true"></ui-chip><ui-chip label="30 minutes" count="12"></ui-chip><ui-chip label="Dinner" [removable]="true"></ui-chip></div></article>
+    <article class="specimen-card"><h3>Swatches</h3><div class="specimen-row"><ui-swatch color="#636b2f"></ui-swatch><ui-swatch color="#f0f1df"></ui-swatch><ui-swatch color="#f7f9fc"></ui-swatch></div></article>
+    <article class="specimen-card"><h3>Badges</h3><div class="specimen-row"><ui-badge text="Draft"></ui-badge><ui-badge text="Planned" variant="info"></ui-badge><ui-badge text="Ready" variant="success"></ui-badge><ui-badge text="Needs review" variant="warning"></ui-badge></div></article>
+    <article class="specimen-card"><h3>Alerts</h3><div class="specimen-stack"><ui-alert title="Plan saved" description="Household changes are up to date." variant="success"></ui-alert><ui-alert title="Review needed" description="One recipe is missing serving information." variant="warning"></ui-alert></div></article>
+    <article class="specimen-card"><h3>Empty state</h3><ui-empty-state title="No meals planned" description="Add a recipe when you are ready to shape the week." icon="sparkles" [primaryCta]="{ label: 'Add meal' }"></ui-empty-state></article>
+    <article class="specimen-card"><h3>Avatar</h3><div class="specimen-row"><ui-avatar name="Dan Malarkey"></ui-avatar><ui-avatar name="Household member" size="lg"></ui-avatar></div></article>
+    <article class="specimen-card"><h3>Table</h3><ui-table [columns]="tableColumns" [rows]="tableRows" [rowKey]="rowKey"></ui-table></article>
+    <article class="specimen-card"><h3>Icons</h3><div class="icon-grid">@for (icon of iconNames; track icon) { <span><ui-icon [name]="icon"></ui-icon><small>{{ icon }}</small></span> }</div></article>
+  </section>
+
+  <section id="features" class="design-system-section">
+    <header><p class="eyebrow">Feature components</p><h2>Reusable product compositions</h2></header>
+    <article class="specimen-card"><h3>Account menu</h3><app-account-menu userName="Dan Malarkey" userInitials="DM" userMeta="dan@example.com" (signOutRequested)="showAccountMenuFeedback()"></app-account-menu></article>
+    <article class="specimen-card"><h3>Filter summary</h3><ui-filter-summary [chips]="filterChips" [details]="[{ label: 'Meal', value: 'Dinner' }, { label: 'Time', value: 'Under 30 minutes' }]"></ui-filter-summary></article>
+    <article class="specimen-card"><h3>Workspace command</h3><ui-workspace-command title="Recipes" description="Search and organize household recipes." [viewItems]="[{ id: 'cards', label: 'Cards' }, { id: 'list', label: 'List' }]" [viewValue]="workspaceView()" [searchValue]="workspaceSearch()" sortLabel="Recently updated" (viewValueChange)="workspaceView.set($event)" (searchValueChange)="workspaceSearch.set($event)"></ui-workspace-command></article>
+    <article class="specimen-card"><h3>Workspace results summary</h3><ui-workspace-results-summary label="24 recipes"></ui-workspace-results-summary></article>
+    <article class="specimen-card"><h3>Plan card</h3><ui-plan-card context="Future billing" title="Household plan" tier="Pro" price="$8/month" description="Billing infrastructure is retained but dormant." [features]="['Shared household access', 'Future premium capabilities']"></ui-plan-card></article>
+    <div class="feature-registry">
+      @for (feature of featureRegistry; track feature.selector) {
+        <article class="specimen-card"><h3>{{ feature.name }}</h3><code>{{ feature.selector }}</code><p>{{ feature.source }}</p></article>
+      }
+    </div>
+  </section>
+
+  <section id="patterns" class="design-system-section">
+    <header><p class="eyebrow">Patterns</p><h2>Deliberate compositions</h2></header>
+    <article class="specimen-card"><h3>Overlay actions</h3><div class="specimen-row"><ui-button (clicked)="modalOpen.set(true)">Open modal</ui-button><ui-button variant="secondary" (clicked)="drawerOpen.set(true)">Open drawer</ui-button><ui-button variant="destructive" (clicked)="confirmationOpen.set(true)">Confirm removal</ui-button></div></article>
+    <article class="specimen-card"><h3>Toast feedback</h3><ui-button variant="secondary" (clicked)="showToast()">Show success toast</ui-button></article>
+  </section>
+</div>
+
+<ui-modal [open]="modalOpen()" title="Plan a meal" description="Modal composition for focused work." (closed)="modalOpen.set(false)"><ui-input label="Meal name" placeholder="Choose a meal"></ui-input><div modal-footer><ui-button variant="secondary" (clicked)="modalOpen.set(false)">Cancel</ui-button><ui-button (clicked)="modalOpen.set(false)">Save</ui-button></div></ui-modal>
+<ui-drawer [open]="drawerOpen()" title="Recipe details" description="Drawer composition for contextual work." (openChange)="drawerOpen.set($event)"><ui-data-strip label="Prep time" value="10 min"></ui-data-strip><div drawer-footer><ui-button (clicked)="drawerOpen.set(false)">Done</ui-button></div></ui-drawer>
+<ui-confirmation-modal [open]="confirmationOpen()" question="Remove this meal?" message="The recipe remains saved and can be planned again." confirmLabel="Remove meal" (closed)="confirmationOpen.set(false)" (confirmed)="confirmationOpen.set(false)"></ui-confirmation-modal>

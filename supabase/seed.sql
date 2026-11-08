@@ -1,0 +1,1 @@
+-- Meal Planner intentionally has no seed data yet.

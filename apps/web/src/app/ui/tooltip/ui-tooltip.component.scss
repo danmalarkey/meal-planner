@@ -1,0 +1,15 @@
+:host,
+.ui-tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.ui-tooltip-anchor:focus-visible {
+  outline: var(--focus-ring-size) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-pill);
+}
+
+.ui-tooltip {
+  width: max-content;
+}

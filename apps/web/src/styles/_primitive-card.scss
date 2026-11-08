@@ -1,0 +1,128 @@
+.ui-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0;
+  border: var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-none);
+  overflow: hidden;
+}
+
+.ui-card--group {
+  gap: 0;
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-none);
+}
+
+.ui-card--shadow {
+  box-shadow: var(--shadow-sm);
+}
+
+.ui-card--floating {
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+}
+
+.ui-card--dense {
+  gap: 0;
+}
+
+.ui-card:not(.ui-card--interactive) {
+  cursor: default;
+}
+
+.ui-card--interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast) var(--easing-standard),
+    box-shadow var(--transition-fast) var(--easing-standard),
+    transform var(--transition-fast) var(--easing-standard);
+}
+
+.ui-card--interactive:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.ui-card--interactive.ui-card--floating:hover {
+  border-color: transparent;
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-card--interactive:active {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(0.0625rem);
+}
+
+.ui-card--interactive:focus-visible {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--color-primary-soft);
+}
+
+.ui-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  align-self: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: var(--border-default);
+}
+
+.ui-card-title {
+  margin-bottom: var(--space-1);
+}
+
+.ui-card-subtitle {
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.ui-card-body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.ui-card-footer {
+  display: grid;
+  align-self: end;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-top: var(--border-default);
+  color: var(--color-text-secondary);
+}
+
+.ui-card--group .ui-card-header {
+  padding-bottom: var(--space-3);
+  border-bottom: none;
+}
+
+.ui-card--group .ui-card-body {
+  padding-top: 0;
+}
+
+.ui-card--group .ui-card-footer {
+  border-top-color: var(--color-border);
+}
+
+.ui-card--dense .ui-card-header,
+.ui-card--dense .ui-card-body,
+.ui-card--dense .ui-card-footer {
+  padding: var(--space-3);
+}
+
+.ui-card--dense.ui-card--group .ui-card-body {
+  padding-top: 0;
+}
+
+.ui-card-actions {
+  color: var(--color-text-secondary);
+}

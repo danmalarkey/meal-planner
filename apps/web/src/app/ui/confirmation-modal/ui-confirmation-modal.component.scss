@@ -1,0 +1,33 @@
+:host {
+  display: contents;
+}
+
+.ui-confirmation-modal-content {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.ui-confirmation-modal-message {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.ui-confirmation-modal-details:empty {
+  display: none;
+}
+
+.ui-confirmation-modal-content--media {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.ui-confirmation-modal-content--media .ui-confirmation-modal-message {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.ui-confirmation-modal-content--media .ui-confirmation-modal-details {
+  grid-column: 1 / -1;
+}

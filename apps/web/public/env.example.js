@@ -1,0 +1,4 @@
+window.mealPlannerEnv = {
+  supabaseUrl: '',
+  supabaseAnonKey: ''
+};

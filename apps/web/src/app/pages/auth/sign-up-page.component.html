@@ -1,0 +1,82 @@
+<app-auth-page-frame
+  [cardTitle]="cardTitle()"
+  [cardDescription]="cardDescription()"
+  introductionTitle="Plan once. Eat well all week."
+  introductionLead="Build a shared household rhythm."
+  introductionDescription=""
+  >
+  @if (!confirmationRequired()) {
+    <form class="auth-form" (submit)="handleSubmit($event)">
+      <ui-input
+        label="Name (optional)"
+        autocomplete="name"
+        helperText="The name shown on your Meal Planner account."
+        [maxLength]="100"
+        [value]="name()"
+        [autofocusTarget]="true"
+        (valueChange)="name.set($event)"
+      ></ui-input>
+      <ui-input
+        label="Email"
+        type="email"
+        autocomplete="email"
+        [maxLength]="254"
+        [required]="true"
+        [value]="email()"
+        (valueChange)="email.set($event)"
+      ></ui-input>
+      <ui-input
+        label="Password"
+        type="password"
+        autocomplete="new-password"
+        helperText="Use at least 8 characters."
+        [required]="true"
+        [value]="password()"
+        (valueChange)="password.set($event)"
+      ></ui-input>
+      <ui-input
+        label="Confirm password"
+        type="password"
+        autocomplete="new-password"
+        [required]="true"
+        [value]="confirmedPassword()"
+        [errorText]="passwordsMismatch() ? 'Passwords do not match.' : undefined"
+        (valueChange)="confirmedPassword.set($event)"
+      ></ui-input>
+      @if (auth.authError()) {
+        <p class="auth-feedback auth-feedback--error" role="alert">
+          {{ auth.authError() }}
+        </p>
+      }
+      <div class="auth-form-actions">
+        <ui-button
+          type="submit"
+          variant="primary-elevated"
+          size="lg"
+          [fullWidth]="true"
+          [loading]="auth.authActionPending()"
+          [loadingLabel]="'Creating account'"
+          [disabled]="!canSubmit()"
+          >
+          Create account
+        </ui-button>
+        <p class="auth-form-legal">Private household access and policy documents will be finalized before launch.</p>
+        <p class="auth-form-secondary">
+          Already have an account?
+          <button type="button" class="auth-text-link" (click)="openSignIn()">Sign in</button>
+        </p>
+      </div>
+    </form>
+  } @else {
+    <section class="auth-completion" aria-live="polite">
+      <p class="auth-feedback auth-feedback--success">
+        We sent a confirmation link to <strong>{{ email().trim() }}</strong>.
+      </p>
+      <p>Open the link to confirm your email and continue to Meal Planner.</p>
+      <ui-button variant="secondary" [fullWidth]="true" (clicked)="openSignIn()">
+        Back to sign in
+      </ui-button>
+    </section>
+  }
+
+</app-auth-page-frame>

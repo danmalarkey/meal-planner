@@ -1,0 +1,49 @@
+@use 'sass:map';
+
+$bootstrap-breakpoints: (
+  xs: 0,
+  sm: 36rem,
+  md: 48rem,
+  lg: 62rem,
+  xl: 75rem,
+  xxl: 87.5rem
+);
+
+@function breakpoint($name) {
+  @if not map.has-key($bootstrap-breakpoints, $name) {
+    @error "Unknown breakpoint `#{$name}`. Available: #{map.keys($bootstrap-breakpoints)}.";
+  }
+
+  @return map.get($bootstrap-breakpoints, $name);
+}
+
+@mixin up($name) {
+  @media (min-width: breakpoint($name)) {
+    @content;
+  }
+}
+
+@mixin down($name) {
+  $value: breakpoint($name);
+
+  @if $value == 0 {
+    @content;
+  } @else {
+    @media (max-width: calc(#{$value} - 0.02rem)) {
+      @content;
+    }
+  }
+}
+
+@mixin between($lower, $upper) {
+  $min: breakpoint($lower);
+  $max: breakpoint($upper);
+
+  @if $min >= $max {
+    @error "`between` expects lower breakpoint before upper breakpoint.";
+  }
+
+  @media (min-width: $min) and (max-width: calc(#{$max} - 0.02rem)) {
+    @content;
+  }
+}

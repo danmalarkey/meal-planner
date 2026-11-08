@@ -1,0 +1,13 @@
+@if (showAuthLoading()) {
+  <main class="app-auth-shell">
+    <section class="app-auth-status" aria-live="polite">
+      <ui-brand></ui-brand>
+      <h1 class="app-auth-status-title">Connecting to Meal Planner</h1>
+      <p class="app-auth-status-copy">Preparing your workspace.</p>
+    </section>
+  </main>
+} @else {
+  <router-outlet></router-outlet>
+}
+
+<ui-toast-host></ui-toast-host>
