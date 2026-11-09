@@ -50,7 +50,7 @@ describe('RecipeCardComponent', () => {
       imports: [RecipeCardTestHostComponent],
       providers: [
         provideRouter([
-          { path: 'meals/:recipeId', component: RecipeDetailTestComponent }
+          { path: 'recipes/:recipeId', component: RecipeDetailTestComponent }
         ])
       ]
     }).compileComponents();
@@ -69,7 +69,7 @@ describe('RecipeCardComponent', () => {
     await fixture.whenStable();
 
     expect(router.url).toBe(
-      '/meals/recipe-1?mealPlanEntry=entry-1&planWeek=2026-11-01&returnTo=%2Fmeal-plan'
+      '/recipes/recipe-1?mealPlanEntry=entry-1&planWeek=2026-11-01&returnTo=%2Fmeal-plan'
     );
   });
 
@@ -91,7 +91,7 @@ describe('RecipeCardComponent', () => {
     fixture.detectChanges();
 
     const favorite = fixture.nativeElement.querySelector(
-      '.recipe-card-favorite'
+      '.recipe-favorite-button'
     ) as HTMLButtonElement;
 
     favorite.click();
@@ -107,10 +107,10 @@ describe('RecipeCardComponent', () => {
     fixture.detectChanges();
 
     const favorite = fixture.nativeElement.querySelector(
-      '.recipe-card-favorite'
+      '.recipe-favorite-button'
     ) as HTMLButtonElement;
 
-    expect(favorite.classList).toContain('recipe-card-favorite--active');
+    expect(favorite.classList).toContain('recipe-favorite-button--active');
     expect(favorite.getAttribute('aria-pressed')).toBe('true');
     expect(favorite.querySelector('svg')?.classList).toContain('ui-icon--filled');
   });
@@ -127,6 +127,6 @@ describe('RecipeCardComponent', () => {
     detailLink.click();
     await fixture.whenStable();
 
-    expect(router.url).toBe('/meals/recipe-1?returnTo=%2Ffavorites');
+    expect(router.url).toBe('/recipes/recipe-1?returnTo=%2Ffavorites');
   });
 });

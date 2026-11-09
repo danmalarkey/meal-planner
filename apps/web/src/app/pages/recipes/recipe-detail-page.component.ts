@@ -22,15 +22,18 @@ import {
   scaleRecipeQuantity,
   SupportedRecipeServings
 } from '../../core/recipes/recipe-scaling';
+import { RecipeFavoriteButtonComponent } from '../../features/recipes/recipe-favorite-button.component';
 import { UiAlertComponent } from '../../ui/alert/ui-alert.component';
 import { UiButtonComponent } from '../../ui/button/ui-button.component';
 import { UiIconComponent } from '../../ui/icon/ui-icon.component';
 import { UiPopoverComponent } from '../../ui/popover/ui-popover.component';
 import { UiTabsComponent } from '../../ui/tabs/ui-tabs.component';
+import { UiToastService } from '../../ui/toast/ui-toast.service';
 
 @Component({
   selector: 'app-recipe-detail-page',
   imports: [
+    RecipeFavoriteButtonComponent,
     RouterLink,
     UiAlertComponent,
     UiButtonComponent,
@@ -70,8 +73,15 @@ import { UiTabsComponent } from '../../ui/tabs/ui-tabs.component';
             @if (currentRecipe.imageUrl) {
               <img [src]="currentRecipe.imageUrl" [alt]="currentRecipe.title" />
             } @else {
-              <div class="recipe-detail-image-placeholder" aria-hidden="true">Meal</div>
+              <div class="recipe-detail-image-placeholder" aria-hidden="true">Recipe</div>
             }
+            <app-recipe-favorite-button
+              class="recipe-detail-favorite-control"
+              [recipeTitle]="currentRecipe.title"
+              [favorite]="currentRecipe.isFavorite"
+              [pending]="favoritePending()"
+              (favoriteChange)="setFavorite($event)"
+            ></app-recipe-favorite-button>
           </div>
           <div class="recipe-detail-heading">
             <h1>{{ currentRecipe.title }}</h1>
@@ -252,6 +262,7 @@ export class RecipeDetailPageComponent implements OnInit {
   private readonly repository = inject(RecipeRepositoryService);
   private readonly mealPlans = inject(MealPlanRepositoryService);
   private readonly draft = inject(MealPlanDraftService);
+  private readonly toast = inject(UiToastService);
   private readonly requestedPlanWeek = this.route.snapshot.queryParamMap.get('planWeek');
   private readonly requestedReturnTo = this.route.snapshot.queryParamMap.get('returnTo');
   private readonly requestedMealPlanEntry = this.route.snapshot.queryParamMap.get('mealPlanEntry');
@@ -291,6 +302,7 @@ export class RecipeDetailPageComponent implements OnInit {
   protected readonly cookedError = signal<string | null>(null);
   protected readonly cooked = signal(false);
   protected readonly updatingCooked = signal(false);
+  protected readonly favoritePending = signal(false);
   protected readonly plannedMealEntryId = signal<string | null>(null);
   protected readonly selectedServings = signal<SupportedRecipeServings>(4);
   protected readonly activeContent = signal<'cookware' | 'ingredients' | 'instructions'>('ingredients');
@@ -356,6 +368,21 @@ export class RecipeDetailPageComponent implements OnInit {
       );
     } finally {
       this.updatingCooked.set(false);
+    }
+  }
+
+  protected async setFavorite(favorite: boolean): Promise<void> {
+    const currentRecipe = this.recipe();
+    if (!currentRecipe || this.favoritePending()) return;
+
+    this.favoritePending.set(true);
+    try {
+      await this.repository.setFavorite(currentRecipe.id, favorite);
+      this.recipe.update((recipe) => (recipe ? { ...recipe, isFavorite: favorite } : recipe));
+    } catch {
+      this.toast.error('Could not update this favorite. Try again.');
+    } finally {
+      this.favoritePending.set(false);
     }
   }
 

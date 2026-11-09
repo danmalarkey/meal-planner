@@ -82,14 +82,14 @@ import { UiInputComponent } from '../../ui/input/ui-input.component';
           ></ui-input>
         </div>
 
-        <div class="recipe-grid" aria-label="Meals available to add to this meal plan">
+        <div class="recipe-grid" aria-label="Recipes available to add to this meal plan">
           @for (recipe of filteredRecipes(); track recipe.id) {
             <app-recipe-card
               [recipe]="recipe"
               [selectable]="true"
               [selected]="selectedRecipeIds().has(recipe.id)"
               selectionIdleIcon="add"
-              [detailLink]="['/meals', recipe.id]"
+              [detailLink]="['/recipes', recipe.id]"
               [detailQueryParams]="recipeDetailQuery()"
               (selectionChange)="setSelected(recipe.id, $event)"
             ></app-recipe-card>
@@ -97,7 +97,7 @@ import { UiInputComponent } from '../../ui/input/ui-input.component';
             <ui-empty-state
               icon="search"
               title="No matching recipes"
-              description="Try another meal name."
+              description="Try another recipe name."
             ></ui-empty-state>
           }
         </div>

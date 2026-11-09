@@ -38,11 +38,14 @@
 }
 
 .recipe-card-selection,
-.recipe-card-favorite {
+.recipe-card-favorite-control {
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
   z-index: 1;
+}
+
+.recipe-card-selection {
   display: grid;
   width: var(--control-height-sm);
   height: var(--control-height-sm);
@@ -55,8 +58,7 @@
   cursor: pointer;
 }
 
-.recipe-card-selection:disabled,
-.recipe-card-favorite:disabled {
+.recipe-card-selection:disabled {
   cursor: default;
 }
 
@@ -71,15 +73,6 @@
 
 .recipe-card-selection--idle-check {
   color: var(--color-text-tertiary);
-}
-
-.recipe-card-favorite {
-  color: var(--color-text-secondary);
-}
-
-.recipe-card-favorite--active {
-  background: var(--color-navigation-active);
-  color: var(--color-text-inverse);
 }
 
 .recipe-card--dimmed .recipe-card-detail-link {

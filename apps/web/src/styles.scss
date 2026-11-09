@@ -443,11 +443,19 @@ h3 {
 }
 
 .recipe-detail-image {
+  position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--color-surface-alt);
   box-shadow: var(--shadow-md);
+}
+
+.recipe-detail-favorite-control {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
 }
 
 .recipe-detail-image img {

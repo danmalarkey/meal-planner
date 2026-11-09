@@ -50,7 +50,7 @@ export function buildRoutes(includeDesignSystem: boolean): Routes {
       data: { recipeScope: 'all' }
     },
     {
-      path: 'meals/:recipeId',
+      path: 'recipes/:recipeId',
       loadComponent: () =>
         import('./pages/recipes/recipe-detail-page.component').then(
           (module) => module.RecipeDetailPageComponent
@@ -67,7 +67,7 @@ export function buildRoutes(includeDesignSystem: boolean): Routes {
     },
     {
       path: 'favorites/:recipeId',
-      redirectTo: 'meals/:recipeId'
+      redirectTo: 'recipes/:recipeId'
     },
     {
       path: 'favorites',
@@ -79,8 +79,8 @@ export function buildRoutes(includeDesignSystem: boolean): Routes {
       data: { recipeScope: 'favorites' }
     },
     {
-      path: 'recipes/:recipeId',
-      redirectTo: 'meals/:recipeId'
+      path: 'meals/:recipeId',
+      redirectTo: 'recipes/:recipeId'
     }
   ];
 

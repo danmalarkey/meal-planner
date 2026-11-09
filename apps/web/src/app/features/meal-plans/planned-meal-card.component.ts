@@ -15,7 +15,7 @@ import { RecipeCardComponent } from '../recipes/recipe-card.component';
       selectionIdleIcon="check"
       [selectionDisabled]="updating()"
       [selectionAriaLabel]="cookedActionLabel()"
-      [detailLink]="['/meals', meal().recipe.id]"
+      [detailLink]="['/recipes', meal().recipe.id]"
       [detailQueryParams]="detailQueryParams()"
       (selectionChange)="cookedChange.emit($event)"
     ></app-recipe-card>

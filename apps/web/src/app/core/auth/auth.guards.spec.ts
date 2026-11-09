@@ -24,7 +24,7 @@ describe('auth return URL policy', () => {
   });
 
   it('preserves a meaningful protected deep link', () => {
-    expect(getAuthReturnUrl('/meals/recipe-123')).toBe('/meals/recipe-123');
+    expect(getAuthReturnUrl('/recipes/recipe-123')).toBe('/recipes/recipe-123');
   });
 
   it('does not redirect back into authentication routes', () => {

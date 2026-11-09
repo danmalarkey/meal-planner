@@ -1,0 +1,25 @@
+:host {
+  display: inline-flex;
+}
+
+.recipe-favorite-button {
+  display: grid;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  place-items: center;
+  border: 0.125rem solid var(--color-surface);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.recipe-favorite-button--active {
+  background: var(--color-navigation-active);
+  color: var(--color-text-inverse);
+}
+
+.recipe-favorite-button:disabled {
+  cursor: default;
+}

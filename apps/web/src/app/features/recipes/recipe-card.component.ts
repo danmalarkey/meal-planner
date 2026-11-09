@@ -4,17 +4,18 @@ import { Params, RouterLink } from '@angular/router';
 import { RecipeSummary } from '../../core/recipes/recipe-repository.service';
 import { UiIconComponent } from '../../ui/icon/ui-icon.component';
 import { UiIconName } from '../../ui/ui-types';
+import { RecipeFavoriteButtonComponent } from './recipe-favorite-button.component';
 
 @Component({
   selector: 'app-recipe-card',
-  imports: [NgTemplateOutlet, RouterLink, UiIconComponent],
+  imports: [NgTemplateOutlet, RecipeFavoriteButtonComponent, RouterLink, UiIconComponent],
   template: `
     <ng-template #cardContent>
       <div class="recipe-card-media">
         @if (recipe().imageUrl) {
           <img [src]="recipe().imageUrl" [alt]="recipe().title" loading="lazy" />
         } @else {
-          <div class="recipe-card-placeholder" aria-hidden="true">Meal</div>
+          <div class="recipe-card-placeholder" aria-hidden="true">Recipe</div>
         }
       </div>
       <div class="recipe-card-body">
@@ -30,7 +31,7 @@ import { UiIconName } from '../../ui/ui-types';
       >
         <a
           class="recipe-card-detail-link"
-          [routerLink]="detailLink() ?? ['/meals', recipe().id]"
+          [routerLink]="detailLink() ?? ['/recipes', recipe().id]"
           [queryParams]="detailQueryParams()"
         >
           <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
@@ -56,23 +57,19 @@ import { UiIconName } from '../../ui/ui-types';
       <article class="recipe-card">
         <a
           class="recipe-card-detail-link"
-          [routerLink]="detailLink() ?? ['/meals', recipe().id]"
+          [routerLink]="detailLink() ?? ['/recipes', recipe().id]"
           [queryParams]="detailQueryParams()"
         >
           <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
         </a>
         @if (showFavoriteToggle()) {
-          <button
-            type="button"
-            class="recipe-card-favorite"
-            [class.recipe-card-favorite--active]="recipe().isFavorite"
-            [disabled]="favoritePending()"
-            [attr.aria-label]="favoriteLabel()"
-            [attr.aria-pressed]="recipe().isFavorite"
-            (click)="favoriteChange.emit(!recipe().isFavorite)"
-          >
-            <ui-icon name="star" size="sm" [filled]="recipe().isFavorite"></ui-icon>
-          </button>
+          <app-recipe-favorite-button
+            class="recipe-card-favorite-control"
+            [recipeTitle]="recipe().title"
+            [favorite]="recipe().isFavorite"
+            [pending]="favoritePending()"
+            (favoriteChange)="favoriteChange.emit($event)"
+          ></app-recipe-favorite-button>
         }
       </article>
     }
@@ -101,11 +98,5 @@ export class RecipeCardComponent {
     return this.selected()
       ? `Remove ${this.recipe().title} from this meal plan draft`
       : `Add ${this.recipe().title} to this meal plan draft`;
-  }
-
-  protected favoriteLabel(): string {
-    return this.recipe().isFavorite
-      ? `Remove ${this.recipe().title} from favorites`
-      : `Add ${this.recipe().title} to favorites`;
   }
 }

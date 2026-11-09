@@ -74,7 +74,7 @@ export class AppShellLayoutComponent {
   protected readonly auth = inject(SupabaseAuthService);
   protected readonly recipesNavigationActive = computed(() => {
     const path = this.currentUrl().split(/[?#]/, 1)[0];
-    return path === '/recipes' || path === '/favorites';
+    return path === '/recipes' || path.startsWith('/recipes/') || path === '/favorites';
   });
 
   protected async signOut(): Promise<void> {
