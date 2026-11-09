@@ -33,9 +33,9 @@ import { UiIconComponent } from '../ui/icon/ui-icon.component';
               <ui-icon class="app-shell-nav-icon" name="list" size="sm"></ui-icon>
               <span>Groceries</span>
             </a>
-            <a routerLink="/favorites" routerLinkActive="app-shell-link--active">
-              <ui-icon class="app-shell-nav-icon" name="star" size="sm"></ui-icon>
-              <span>Favorites</span>
+            <a routerLink="/recipes" routerLinkActive="app-shell-link--active">
+              <ui-icon class="app-shell-nav-icon" name="recipes" size="sm"></ui-icon>
+              <span>Recipes</span>
             </a>
           </nav>
           @if (auth.enabled()) {

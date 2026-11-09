@@ -11,6 +11,10 @@ import {
   RecipeSummary
 } from '../../core/recipes/recipe-repository.service';
 import { RecipeCardComponent } from '../../features/recipes/recipe-card.component';
+import {
+  RecipeScope,
+  RecipeScopeFilterComponent
+} from '../../features/recipes/recipe-scope-filter.component';
 import { MealThumbnailStackComponent } from '../../features/meal-plans/meal-thumbnail-stack.component';
 import { UiAlertComponent } from '../../ui/alert/ui-alert.component';
 import { UiButtonComponent } from '../../ui/button/ui-button.component';
@@ -23,6 +27,7 @@ import { UiInputComponent } from '../../ui/input/ui-input.component';
   selector: 'app-meal-plan-builder-page',
   imports: [
     RecipeCardComponent,
+    RecipeScopeFilterComponent,
     MealThumbnailStackComponent,
     UiAlertComponent,
     UiButtonComponent,
@@ -41,11 +46,11 @@ import { UiInputComponent } from '../../ui/input/ui-input.component';
       @if (error()) {
         <ui-alert
           variant="danger"
-          title="We couldn't load your favorites"
+          title="We couldn't load your recipes"
           [description]="error()!"
         ></ui-alert>
       } @else if (loading()) {
-        <div class="recipe-grid" aria-label="Loading favorites" aria-busy="true">
+        <div class="recipe-grid" aria-label="Loading recipes" aria-busy="true">
           @for (item of loadingCards; track item) {
             <div class="recipe-card-skeleton ui-loading-shell-card">
               <span class="ui-skeleton-block recipe-card-skeleton-image"></span>
@@ -56,19 +61,26 @@ import { UiInputComponent } from '../../ui/input/ui-input.component';
       } @else if (recipes().length === 0) {
         <ui-empty-state
           icon="image-list"
-          title="No favorites yet"
-          description="Import favorite meals before building a plan."
+          title="No recipes yet"
+          description="Add recipes before building a plan."
         ></ui-empty-state>
       } @else {
-        <ui-input
-          label="Find meals to add"
-          type="search"
-          placeholder="Search your favorites"
-          iconLeading="search"
-          [clearable]="true"
-          [value]="query()"
-          (valueChange)="query.set($event)"
-        ></ui-input>
+        <div class="meal-plan-builder-filters">
+          <app-recipe-scope-filter
+            ariaLabel="Recipes available for this meal plan"
+            [value]="recipeScope()"
+            (valueChange)="recipeScope.set($event)"
+          ></app-recipe-scope-filter>
+          <ui-input
+            label="Find meals to add"
+            type="search"
+            placeholder="Search recipes"
+            iconLeading="search"
+            [clearable]="true"
+            [value]="query()"
+            (valueChange)="query.set($event)"
+          ></ui-input>
+        </div>
 
         <div class="recipe-grid" aria-label="Meals available to add to this meal plan">
           @for (recipe of filteredRecipes(); track recipe.id) {
@@ -177,6 +189,7 @@ export class MealPlanBuilderPageComponent implements OnInit {
     this.draft.selectedRecipeIds(this.startsOn)
   );
   protected readonly query = signal('');
+  protected readonly recipeScope = signal<RecipeScope>('all');
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly reviewOpen = signal(false);
@@ -185,9 +198,11 @@ export class MealPlanBuilderPageComponent implements OnInit {
 
   protected readonly filteredRecipes = computed(() => {
     const query = this.query().trim().toLocaleLowerCase();
-    return query
-      ? this.recipes().filter((recipe) => recipe.title.toLocaleLowerCase().includes(query))
-      : this.recipes();
+    return this.recipes().filter(
+      (recipe) =>
+        (this.recipeScope() === 'all' || recipe.isFavorite) &&
+        (!query || recipe.title.toLocaleLowerCase().includes(query))
+    );
   });
   protected readonly selectedRecipes = computed(() => {
     const recipeById = new Map(this.recipes().map((recipe) => [recipe.id, recipe] as const));

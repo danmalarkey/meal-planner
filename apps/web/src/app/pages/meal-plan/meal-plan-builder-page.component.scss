@@ -10,6 +10,11 @@
   margin: 0 auto;
 }
 
+.meal-plan-builder-filters {
+  display: grid;
+  row-gap: var(--space-2);
+}
+
 .meal-plan-builder-actions {
   position: fixed;
   left: 50%;
@@ -115,6 +120,10 @@
   .meal-plan-builder-page {
     gap: 0;
     padding-bottom: calc(var(--space-8) + var(--space-4));
+  }
+
+  .meal-plan-builder-filters {
+    padding-top: var(--space-3);
   }
 
   .meal-plan-builder-actions {

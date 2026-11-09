@@ -2,7 +2,7 @@
 
 ## Scope
 
-Meal plans are household-owned weekly containers. The initial Meal Plan slice supports past, current, and future weeks; creating a week from favorite recipes; copying an earlier plan into an empty week; ordering meals at creation; planned servings; and reversible cooked state.
+Meal plans are household-owned weekly containers. The initial Meal Plan slice supports past, current, and future weeks; creating a week from household recipes; copying an earlier plan into an empty week; ordering meals at creation; planned servings; and reversible cooked state.
 
 ## Weekly plans
 
@@ -23,7 +23,7 @@ Each planned-meal entry references a recipe and owns occurrence-specific state:
 
 Completion belongs to the planned meal, never to the reusable recipe.
 
-Empty current and future weeks expose **Create meal plan**, which navigates to a dedicated full-page recipe-selection flow for the selected week. The screen also shows the two most recent populated plans as compact thumbnail previews. A recent plan may be reviewed or copied directly into the empty week, with an immediate Undo action after copying. The creation screen shows the complete searchable favorites grid, uses a plus on available cards and a check after selection, and keeps the confirmation action available above mobile navigation. Empty weeks do not display arbitrary recipe cards as if they were recommendations.
+Empty current and future weeks expose **Create meal plan**, which navigates to a dedicated full-page recipe-selection flow for the selected week. The screen also shows the two most recent populated plans as compact thumbnail previews. A recent plan may be reviewed or copied directly into the empty week, with an immediate Undo action after copying. The creation screen shows the complete searchable recipe library with **All recipes** and **Favorites** scopes, uses a plus on available cards and a check after selection, and keeps the confirmation action available above mobile navigation. Empty weeks do not display arbitrary recipe cards as if they were recommendations.
 
 Building the plan finalizes that week's meal membership. A created plan does not expose **Add meals**, and its builder route redirects back to the plan. Any future replace, remove, or rebuild workflow must be introduced as an explicit editing mode rather than incremental addition through the creation flow.
 
@@ -51,7 +51,7 @@ On an empty current or future week, the two most recent populated plans provide 
 
 ## Definite future enhancement: Recommended plan
 
-Empty current or future weeks should eventually offer a genuine **Recommended plan** assembled from the household's favorites. Recommendations should consider recent cooking history, repetition, variety, preparation time, and other useful household preferences before proposing a balanced week.
+Empty current or future weeks should eventually offer a genuine **Recommended plan** informed by household members' favorites. Recommendations should also consider recent cooking history, repetition, variety, preparation time, and other useful household preferences before proposing a balanced week.
 
 Until that recommendation engine exists, empty weeks show only the manual **Create meal plan** action. Recommended plans must remain suggestions until the user chooses to save them, and must never silently replace an existing plan.
 

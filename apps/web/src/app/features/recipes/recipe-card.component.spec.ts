@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RecipeSummary } from '../../core/recipes/recipe-repository.service';
@@ -12,9 +12,11 @@ class RecipeDetailTestComponent {}
   template: `
     <app-recipe-card
       [recipe]="recipe"
-      [selectable]="true"
+      [selectable]="selectable()"
+      [showFavoriteToggle]="showFavoriteToggle()"
       [detailQueryParams]="detailQueryParams"
       (selectionChange)="selectionCount = selectionCount + 1"
+      (favoriteChange)="favoriteChange = $event"
     ></app-recipe-card>
   `
 })
@@ -25,14 +27,18 @@ class RecipeCardTestHostComponent {
     minutes: 30,
     baseServings: 4,
     imageUrl: null,
-    dietaryAssessment: null
+    dietaryAssessment: null,
+    isFavorite: true
   };
   readonly detailQueryParams = {
     mealPlanEntry: 'entry-1',
     planWeek: '2026-11-01',
     returnTo: '/meal-plan'
   };
+  readonly selectable = signal(true);
+  readonly showFavoriteToggle = signal(false);
   selectionCount = 0;
+  favoriteChange: boolean | null = null;
 }
 
 describe('RecipeCardComponent', () => {
@@ -76,6 +82,22 @@ describe('RecipeCardComponent', () => {
     await fixture.whenStable();
 
     expect(fixture.componentInstance.selectionCount).toBe(1);
+    expect(router.url).toBe('/');
+  });
+
+  it('keeps the favorite control separate from recipe navigation', async () => {
+    fixture.componentInstance.selectable.set(false);
+    fixture.componentInstance.showFavoriteToggle.set(true);
+    fixture.detectChanges();
+
+    const favorite = fixture.nativeElement.querySelector(
+      '.recipe-card-favorite'
+    ) as HTMLButtonElement;
+
+    favorite.click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.favoriteChange).toBeFalse();
     expect(router.url).toBe('/');
   });
 });

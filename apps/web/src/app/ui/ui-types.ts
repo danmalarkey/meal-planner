@@ -47,6 +47,7 @@ export type UiIconName =
   | 'list'
   | 'more'
   | 'music'
+  | 'recipes'
   | 'settings'
   | 'sign-out'
   | 'search'

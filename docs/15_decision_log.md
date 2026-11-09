@@ -1,5 +1,21 @@
 # Decision Log
 
+## 2026-11-09 — Recipes is the shared library and favorites are personal
+
+- Status: Active — implemented; hosted schema applied
+- Decision: The primary product area is **Recipes**. **All recipes** contains the household-owned library, while **Favorites** is a personal member-to-recipe relationship and filter. Existing Mealime recipes are favorited for every current household member during migration; future website imports enter All recipes until a member favorites them. Meal-plan creation may browse either scope.
+- Why it matters: Recipe ownership remains shared for planning and groceries while each household member can express preferences without duplicating or hiding recipes.
+- Canonical references: `docs/01_recipe_data_model.md`, `docs/02_product_structure.md`, `docs/03_meal_plan_model.md`, `supabase/migrations/20261109103000_recipe_favorites.sql`
+- Follow-up trigger: Revisit shared or aggregate favorite views only if household use shows that personal Favorites is insufficient for planning together.
+
+## 2026-11-09 — Recipe import from public websites is deferred scope
+
+- Status: Deferred — accepted backlog item
+- Decision: Meal Planner will eventually let a household member paste a public recipe-page URL, review the extracted recipe fields, and save the confirmed result to **All recipes**. Imports preserve the source URL and attribution, use the existing serving and source-string model, reject unsafe/private destinations, and fall back to manual entry when extraction is incomplete rather than silently saving partial data. Favorite state remains a separate personal action.
+- Why it matters: The household can grow its recipe library without retyping reliable public recipe data while retaining control over accuracy, ownership, and source provenance.
+- Canonical references: `docs/01_recipe_data_model.md`, `docs/09_execution_backlog.md`
+- Follow-up trigger: Begin implementation only after defining supported structured-data formats, server-side fetch protections, image handling, duplicate detection, and the review-before-save interface.
+
 ## 2026-11-08 — Empty weeks offer recent-plan copy-forward
 
 - Status: Active — implemented
@@ -27,7 +43,7 @@
 ## 2026-11-07 — Meal-plan creation uses a routed full-recipe selection flow
 
 - Status: Active — initial routed selection shipped
-- Decision: Creating a meal plan for an empty current or future week navigates to a dedicated screen containing the complete searchable favorites grid. Recipe cards become selection controls with visible check state, and a persistent confirmation action sits above mobile navigation. Building finalizes the week's meal membership: created plans expose no Add action, and their builder routes return to the plan. Meal selection is not presented in a drawer.
+- Decision: Creating a meal plan for an empty current or future week navigates to a dedicated screen containing the complete searchable recipe library with **All recipes** and **Favorites** scopes. Recipe cards become selection controls with visible check state, and a persistent confirmation action sits above mobile navigation. Building finalizes the week's meal membership: created plans expose no Add action, and their builder routes return to the plan. Meal selection is not presented in a drawer.
 - Why it matters: Choosing meals is the primary task, so it needs the space, imagery, and direct manipulation of the full recipe library instead of a secondary overlay.
 - Canonical references: `docs/03_meal_plan_model.md`, `apps/web/src/app/pages/meal-plan/meal-plan-builder-page.component.ts`, `apps/web/src/app/features/recipes/recipe-card.component.ts`
 - Follow-up trigger: Introduce a clearly named replace, remove, or rebuild mode only if real usage shows that post-creation structural editing is needed.
@@ -67,7 +83,7 @@
 ## 2026-11-07 — Cooked state belongs to the planned meal
 
 - Status: Active
-- Decision: Meal Plan cards use the same reversible top-right check circle as recipe selection to mark an individual planned-meal entry cooked or not cooked. The filled circle and selected-card treatment show completion, while tapping the recipe content opens its details. Cooked state is backed by a completion timestamp on the entry and never mutates the favorite recipe itself.
+- Decision: Meal Plan cards use the same reversible top-right check circle as recipe selection to mark an individual planned-meal entry cooked or not cooked. The filled circle and selected-card treatment show completion, while tapping the recipe content opens its details. Cooked state is backed by a completion timestamp on the entry and never mutates the reusable recipe or its favorite state.
 - Why it matters: A recipe can appear in many weekly plans and be cooked many times, so completion must describe one occurrence rather than mutate the reusable recipe.
 - Canonical references: `docs/02_product_structure.md`, `docs/03_meal_plan_model.md`, `apps/web/src/app/features/meal-plans/planned-meal-card.component.ts`
 - Follow-up trigger: Add cooking history or ratings only after persisted meal plans and the Cooked? flow are working end to end.
@@ -82,7 +98,7 @@
 
 ## 2026-11-07 — Primary product areas and account navigation
 
-- Status: Active
+- Status: Superseded by **Recipes is the shared library and favorites are personal** on 2026-11-09
 - Decision: Meal Planner has four primary areas: Meal plan, Groceries, Favorites, and Settings. The shell exposes the first three as product navigation; Settings and Sign out live in the user-avatar account popover. That same popover sits at the right of the desktop header and at the end of the mobile bottom bar without becoming part of the semantic primary-navigation group. Imported meals are all treated as favorites, so there is no separate general recipe-library destination.
 - Why it matters: The structure separates household planning work from account management and gives every imported meal one clear home.
 - Canonical references: `docs/02_product_structure.md`, `apps/web/src/app/app.route-definitions.ts`, `apps/web/src/app/layouts/app-shell-layout.component.ts`, `apps/web/src/app/features/account/account-menu.component.ts`

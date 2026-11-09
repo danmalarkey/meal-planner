@@ -1,0 +1,38 @@
+:host {
+  display: contents;
+}
+
+.recipe-library-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: var(--space-2);
+}
+
+.recipe-library-toolbar {
+  display: grid;
+  row-gap: var(--space-2);
+}
+
+.recipe-library-controls ui-input {
+  min-width: 0;
+}
+
+.recipe-grid ui-empty-state {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 47.9375rem) {
+  .recipe-library-toolbar {
+    padding-top: var(--space-3);
+  }
+
+  ui-filter-summary {
+    display: block;
+    padding-top: var(--space-2);
+  }
+
+  .recipe-grid {
+    padding-top: var(--space-4);
+  }
+}

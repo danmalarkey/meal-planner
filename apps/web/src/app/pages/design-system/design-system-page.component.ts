@@ -133,7 +133,7 @@ export class DesignSystemPageComponent {
     { label: 'Accessibility', value: 'accessibility' }
   ];
   protected readonly breadcrumbs = [
-    { label: 'Favorites', path: '/favorites' },
+    { label: 'Recipes', path: '/recipes' },
     { label: 'Weeknight pasta' }
   ];
   protected readonly filterChips: UiFilterChip[] = [

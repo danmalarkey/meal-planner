@@ -4,17 +4,17 @@ Meal Planner has four primary product areas:
 
 - **Meal plan** is the signed-in landing area and owns the household's weekly meal schedule.
 - **Groceries** owns the household shopping list derived from planned meals plus manual items.
-- **Favorites** is the recipe library. The imported meals are already favorites; there is no separate all-recipes area in the current product.
-- Meal detail uses the neutral `/meals/:recipeId` route because a meal may be opened from Favorites, a meal plan, or another future workflow. Section routes do not own meal identity.
+- **Recipes** is the household recipe library. **All recipes** contains the shared library; **Favorites** is a personal filter over that library rather than a separate collection or ownership boundary.
+- Meal detail uses the neutral `/meals/:recipeId` route because a meal may be opened from Recipes, a meal plan, or another future workflow. Section routes do not own meal identity.
 - **Settings** owns account and household configuration. It is reached from the user-avatar popover rather than occupying primary navigation.
 
-The primary app shell exposes Meal plan, Groceries, and Favorites. Account identity, Settings, and Sign out are grouped in the account menu because they describe the signed-in user rather than the meal-planning workflow.
+The primary app shell exposes Meal plan, Groceries, and Recipes. Account identity, Settings, and Sign out are grouped in the account menu because they describe the signed-in user rather than the meal-planning workflow.
 
 ## Meal Plan State
 
-A meal plan is persisted household data, not a filtered view of Favorites. Each planned-meal entry references one favorite recipe and owns its plan-specific state, including position, planned servings, optional scheduled day, and completion.
+A meal plan is persisted household data, not a filtered view of Recipes. Each planned-meal entry references one household recipe and owns its plan-specific state, including position, planned servings, optional scheduled day, and completion.
 
-The **Cooked?** action sets a completion timestamp on the planned-meal entry. Cooked cards remain visible in the plan with a clear completed treatment. The action may be reversed to correct an accidental completion. Completion never changes the underlying recipe or removes it from Favorites, because the same recipe may be cooked again in another plan.
+The **Cooked?** action sets a completion timestamp on the planned-meal entry. Cooked cards remain visible in the plan with a clear completed treatment. The action may be reversed to correct an accidental completion. Completion never changes the underlying recipe or its personal favorite state, because the same recipe may be cooked again in another plan.
 
 Household members can navigate past and future weeks. **Use this plan again** copies a past plan into a selected current or future week without modifying history; copied entries start uncooked. The detailed behavior is owned by `docs/03_meal_plan_model.md`.
 

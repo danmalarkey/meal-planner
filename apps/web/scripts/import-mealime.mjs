@@ -238,6 +238,26 @@ async function importRecipes(supabase, householdId, entries, imageDirectory) {
     for (const row of data) recipeIds.set(row.source_id, row.id);
   }
 
+  const { data: householdMembers, error: memberError } = await supabase
+    .from('household_members')
+    .select('user_id')
+    .eq('household_id', householdId);
+  if (memberError) throw memberError;
+
+  const favoriteRows = [...recipeIds.values()].flatMap((recipeId) =>
+    householdMembers.map((member) => ({
+      household_id: householdId,
+      recipe_id: recipeId,
+      user_id: member.user_id
+    }))
+  );
+  for (const rows of chunks(favoriteRows, 250)) {
+    const { error } = await supabase
+      .from('recipe_favorites')
+      .upsert(rows, { onConflict: 'recipe_id,user_id' });
+    if (error) throw error;
+  }
+
   let completed = 0;
   for (const [sourceId, recipe] of entries) {
     const recipeId = recipeIds.get(sourceId);

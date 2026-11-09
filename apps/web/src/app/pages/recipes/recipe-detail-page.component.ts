@@ -273,13 +273,13 @@ export class RecipeDetailPageComponent implements OnInit {
     ? `/meal-plan/build/${this.planningWeekKey}`
     : this.hasPlannedMealContext
       ? '/meal-plan'
-      : '/favorites';
+      : '/recipes';
   protected readonly backQueryParams = this.hasPlannedMealContext
     ? { week: this.requestedPlanWeek }
     : null;
   protected readonly backLabel = this.planningWeekKey || this.hasPlannedMealContext
     ? 'Back to meal plan'
-    : 'All favorites';
+    : 'All recipes';
 
   protected readonly recipe = signal<RecipeDetail | null>(null);
   protected readonly loading = signal(true);

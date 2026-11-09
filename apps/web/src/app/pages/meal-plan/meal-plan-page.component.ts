@@ -115,7 +115,7 @@ import { UiToastService } from '../../ui/toast/ui-toast.service';
           <ui-empty-state
             icon="add"
             title="No meals planned"
-            [description]="'Choose favorites to add to ' + weekLabel().toLowerCase() + '.'"
+            [description]="'Choose recipes to add to ' + weekLabel().toLowerCase() + '.'"
             [primaryCta]="{ label: 'Create meal plan' }"
             (primaryClicked)="openBuilder()"
           ></ui-empty-state>

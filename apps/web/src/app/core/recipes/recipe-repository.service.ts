@@ -9,6 +9,7 @@ export interface RecipeSummary {
   baseServings: number;
   imageUrl: string | null;
   dietaryAssessment: string | null;
+  isFavorite: boolean;
 }
 
 export interface RecipeIngredient {
@@ -38,6 +39,7 @@ interface RecipeRow {
   base_servings: number;
   image_storage_path: string | null;
   dietary_metadata: { assessment?: unknown } | null;
+  favorites: Array<{ user_id: string }> | null;
 }
 
 interface SignedImageUrl {
@@ -56,6 +58,8 @@ interface ExpiringRequest<T> {
 }
 
 const SIGNED_IMAGE_URL_TTL_MS = 50 * 60 * 1000;
+const RECIPE_SUMMARY_SELECT =
+  'id,title,minutes,base_servings,image_storage_path,dietary_metadata,favorites:recipe_favorites(user_id)';
 
 @Injectable({ providedIn: 'root' })
 export class RecipeRepositoryService {
@@ -117,7 +121,7 @@ export class RecipeRepositoryService {
     const client = this.requiredClient();
     let query = client
       .from('recipes')
-      .select('id,title,minutes,base_servings,image_storage_path,dietary_metadata');
+      .select(RECIPE_SUMMARY_SELECT);
     if (recipeIds) query = query.in('id', recipeIds);
 
     const { data, error } = await query.order('title');
@@ -153,7 +157,7 @@ export class RecipeRepositoryService {
     const [recipeResult, ingredientResult, stepResult, cookwareResult] = await Promise.all([
       client
         .from('recipes')
-        .select('id,title,minutes,base_servings,image_storage_path,dietary_metadata')
+        .select(RECIPE_SUMMARY_SELECT)
         .eq('id', recipeId)
         .single(),
       client
@@ -212,6 +216,16 @@ export class RecipeRepositoryService {
     return recipe;
   }
 
+  async setFavorite(recipeId: string, favorite: boolean): Promise<void> {
+    const { error } = await this.requiredClient().rpc('set_recipe_favorite', {
+      p_recipe_id: recipeId,
+      p_favorite: favorite
+    });
+    if (error) throw error;
+
+    this.updateFavoriteCache(recipeId, favorite);
+  }
+
   private rememberSummaries(recipes: RecipeSummary[]): void {
     const expiresAt = Date.now() + SIGNED_IMAGE_URL_TTL_MS;
     for (const recipe of recipes) {
@@ -233,6 +247,34 @@ export class RecipeRepositoryService {
     this.signedImageUrlByPath.clear();
   }
 
+  private updateFavoriteCache(recipeId: string, favorite: boolean): void {
+    const updateRecipe = <T extends RecipeSummary>(recipe: T): T =>
+      recipe.id === recipeId ? { ...recipe, isFavorite: favorite } : recipe;
+
+    if (this.recipeListRequest) {
+      this.recipeListRequest = {
+        ...this.recipeListRequest,
+        request: this.recipeListRequest.request.then((recipes) => recipes.map(updateRecipe))
+      };
+    }
+
+    const summary = this.recipeSummaryById.get(recipeId);
+    if (summary) {
+      this.recipeSummaryById.set(recipeId, {
+        ...summary,
+        value: updateRecipe(summary.value)
+      });
+    }
+
+    const detail = this.recipeDetailRequests.get(recipeId);
+    if (detail) {
+      this.recipeDetailRequests.set(recipeId, {
+        ...detail,
+        request: detail.request.then(updateRecipe)
+      });
+    }
+  }
+
   private summary(row: RecipeRow, signedUrls: Map<string, string>): RecipeSummary {
     const assessment = row.dietary_metadata?.assessment;
     return {
@@ -241,7 +283,8 @@ export class RecipeRepositoryService {
       minutes: row.minutes,
       baseServings: row.base_servings,
       imageUrl: row.image_storage_path ? signedUrls.get(row.image_storage_path) ?? null : null,
-      dietaryAssessment: typeof assessment === 'string' ? assessment : null
+      dietaryAssessment: typeof assessment === 'string' ? assessment : null,
+      isFavorite: (row.favorites?.length ?? 0) > 0
     };
   }
 

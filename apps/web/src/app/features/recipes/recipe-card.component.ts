@@ -53,9 +53,24 @@ import { UiIconName } from '../../ui/ui-types';
         </button>
       </article>
     } @else {
-      <a class="recipe-card" [routerLink]="['/meals', recipe().id]">
-        <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
-      </a>
+      <article class="recipe-card">
+        <a class="recipe-card-detail-link" [routerLink]="['/meals', recipe().id]">
+          <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
+        </a>
+        @if (showFavoriteToggle()) {
+          <button
+            type="button"
+            class="recipe-card-favorite"
+            [class.recipe-card-favorite--active]="recipe().isFavorite"
+            [disabled]="favoritePending()"
+            [attr.aria-label]="favoriteLabel()"
+            [attr.aria-pressed]="recipe().isFavorite"
+            (click)="favoriteChange.emit(!recipe().isFavorite)"
+          >
+            <ui-icon name="star" size="sm"></ui-icon>
+          </button>
+        }
+      </article>
     }
   `,
   styleUrl: './recipe-card.component.scss',
@@ -71,7 +86,10 @@ export class RecipeCardComponent {
   readonly selectionAriaLabel = input<string | null>(null);
   readonly detailLink = input<string | readonly (string | number)[] | null>(null);
   readonly detailQueryParams = input<Params | null>(null);
+  readonly showFavoriteToggle = input(false);
+  readonly favoritePending = input(false);
   readonly selectionChange = output<boolean>();
+  readonly favoriteChange = output<boolean>();
 
   protected selectionLabel(): string {
     if (this.selectionAriaLabel()) return this.selectionAriaLabel()!;
@@ -79,5 +97,11 @@ export class RecipeCardComponent {
     return this.selected()
       ? `Remove ${this.recipe().title} from this meal plan draft`
       : `Add ${this.recipe().title} to this meal plan draft`;
+  }
+
+  protected favoriteLabel(): string {
+    return this.recipe().isFavorite
+      ? `Remove ${this.recipe().title} from favorites`
+      : `Add ${this.recipe().title} to favorites`;
   }
 }

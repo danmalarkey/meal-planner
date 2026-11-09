@@ -37,7 +37,8 @@
   content: '';
 }
 
-.recipe-card-selection {
+.recipe-card-selection,
+.recipe-card-favorite {
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
@@ -54,7 +55,8 @@
   cursor: pointer;
 }
 
-.recipe-card-selection:disabled {
+.recipe-card-selection:disabled,
+.recipe-card-favorite:disabled {
   cursor: default;
 }
 
@@ -69,6 +71,18 @@
 
 .recipe-card-selection--idle-check {
   color: var(--color-text-tertiary);
+}
+
+.recipe-card-favorite {
+  color: var(--color-text-secondary);
+}
+
+.recipe-card-favorite--active {
+  color: var(--color-navigation-active);
+}
+
+.recipe-card-favorite--active .ui-icon {
+  fill: currentColor;
 }
 
 .recipe-card--dimmed .recipe-card-detail-link {
