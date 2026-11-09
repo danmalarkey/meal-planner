@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   RecipeRepositoryService,
   RecipeSummary
@@ -36,7 +37,7 @@ type RecipeTimeFilter = 'any' | 'up-to-30' | '31-to-45' | 'over-45';
   template: `
     <section class="page recipe-library-page">
       <header class="page-header">
-        <h1>Recipes</h1>
+        <h1>{{ pageTitle }}</h1>
       </header>
 
       @if (error()) {
@@ -63,8 +64,8 @@ type RecipeTimeFilter = 'any' | 'up-to-30' | '31-to-45' | 'over-45';
       } @else {
         <div class="recipe-library-toolbar">
           <app-recipe-scope-filter
-            [value]="libraryView()"
-            (valueChange)="libraryView.set($event)"
+            [value]="libraryView"
+            (valueChange)="setLibraryView($event)"
           ></app-recipe-scope-filter>
           <div class="recipe-library-controls">
             <ui-input
@@ -100,6 +101,7 @@ type RecipeTimeFilter = 'any' | 'up-to-30' | '31-to-45' | 'over-45';
             <app-recipe-card
               [recipe]="recipe"
               [showFavoriteToggle]="true"
+              [detailQueryParams]="recipeDetailQueryParams"
               [favoritePending]="favoritePendingIds().has(recipe.id)"
               (favoriteChange)="setFavorite(recipe, $event)"
             ></app-recipe-card>
@@ -110,7 +112,7 @@ type RecipeTimeFilter = 'any' | 'up-to-30' | '31-to-45' | 'over-45';
                 title="No favorites yet"
                 description="Tap the star on a recipe to add it to your favorites."
                 [primaryCta]="{ label: 'Show all recipes' }"
-                (primaryClicked)="libraryView.set('all')"
+                (primaryClicked)="setLibraryView('all')"
               ></ui-empty-state>
             } @else {
               <ui-empty-state
@@ -162,11 +164,17 @@ type RecipeTimeFilter = 'any' | 'up-to-30' | '31-to-45' | 'over-45';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeLibraryPageComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly repository = inject(RecipeRepositoryService);
   private readonly toast = inject(UiToastService);
 
   protected readonly recipes = signal<RecipeSummary[]>([]);
-  protected readonly libraryView = signal<RecipeScope>('all');
+  protected readonly libraryView: RecipeScope =
+    this.route.snapshot.data['recipeScope'] === 'favorites' ? 'favorites' : 'all';
+  protected readonly pageTitle = this.libraryView === 'favorites' ? 'Favorites' : 'Recipes';
+  protected readonly recipeDetailQueryParams =
+    this.libraryView === 'favorites' ? { returnTo: '/favorites' } : null;
   protected readonly query = signal('');
   protected readonly filtersOpen = signal(false);
   protected readonly timeFilter = signal<RecipeTimeFilter>('any');
@@ -225,7 +233,7 @@ export class RecipeLibraryPageComponent implements OnInit {
   });
   protected readonly showFavoritesEmptyState = computed(
     () =>
-      this.libraryView() === 'favorites' &&
+      this.libraryView === 'favorites' &&
       !this.query().trim() &&
       this.activeFilterCount() === 0
   );
@@ -238,6 +246,11 @@ export class RecipeLibraryPageComponent implements OnInit {
     this.draftTimeFilter.set(this.timeFilter());
     this.draftServingsFilter.set(this.servingsFilter());
     this.filtersOpen.set(true);
+  }
+
+  protected setLibraryView(scope: RecipeScope): void {
+    if (scope === this.libraryView) return;
+    void this.router.navigateByUrl(scope === 'favorites' ? '/favorites' : '/recipes');
   }
 
   protected applyFilters(): void {
@@ -298,7 +311,7 @@ export class RecipeLibraryPageComponent implements OnInit {
     const query = this.query().trim().toLocaleLowerCase();
     return this.recipes().filter((recipe) => {
       const matchesQuery = !query || recipe.title.toLocaleLowerCase().includes(query);
-      const matchesView = this.libraryView() === 'all' || recipe.isFavorite;
+      const matchesView = this.libraryView === 'all' || recipe.isFavorite;
       const matchesServings =
         servingsFilter === 'any' || recipe.baseServings === Number(servingsFilter);
       return (

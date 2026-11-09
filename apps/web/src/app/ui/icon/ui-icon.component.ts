@@ -90,10 +90,7 @@ export const UI_ICONS: Record<UiIconName, LucideIconData> = {
     template: `
     <svg
       [lucideIcon]="icon()"
-      class="ui-icon"
-      [class.ui-icon--sm]="size() === 'sm'"
-      [class.ui-icon--lg]="size() === 'lg'"
-      [class.ui-icon--filled]="filled()"
+      [class]="iconClass()"
       [size]="iconSize()"
       [strokeWidth]="1.75"
       [title]="decorative() ? null : ariaLabel()"
@@ -112,6 +109,14 @@ export class UiIconComponent {
   readonly ariaLabel = input<string | undefined>(undefined);
 
   protected readonly icon = computed(() => UI_ICONS[this.name()]);
+
+  protected readonly iconClass = computed(() => {
+    const classes = ['ui-icon'];
+    if (this.size() === 'sm') classes.push('ui-icon--sm');
+    if (this.size() === 'lg') classes.push('ui-icon--lg');
+    if (this.filled()) classes.push('ui-icon--filled');
+    return classes.join(' ');
+  });
 
   protected readonly iconSize = computed(() => {
     switch (this.size()) {

@@ -78,7 +78,8 @@
 }
 
 .recipe-card-favorite--active {
-  color: var(--color-navigation-active);
+  background: var(--color-navigation-active);
+  color: var(--color-text-inverse);
 }
 
 .recipe-card--dimmed .recipe-card-detail-link {

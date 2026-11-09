@@ -14,7 +14,7 @@ class RecipeDetailTestComponent {}
       [recipe]="recipe"
       [selectable]="selectable()"
       [showFavoriteToggle]="showFavoriteToggle()"
-      [detailQueryParams]="detailQueryParams"
+      [detailQueryParams]="detailQueryParams()"
       (selectionChange)="selectionCount = selectionCount + 1"
       (favoriteChange)="favoriteChange = $event"
     ></app-recipe-card>
@@ -30,11 +30,11 @@ class RecipeCardTestHostComponent {
     dietaryAssessment: null,
     isFavorite: true
   };
-  readonly detailQueryParams = {
+  readonly detailQueryParams = signal<Record<string, string>>({
     mealPlanEntry: 'entry-1',
     planWeek: '2026-11-01',
     returnTo: '/meal-plan'
-  };
+  });
   readonly selectable = signal(true);
   readonly showFavoriteToggle = signal(false);
   selectionCount = 0;
@@ -99,5 +99,34 @@ describe('RecipeCardComponent', () => {
 
     expect(fixture.componentInstance.favoriteChange).toBeFalse();
     expect(router.url).toBe('/');
+  });
+
+  it('shows an existing favorite as selected', () => {
+    fixture.componentInstance.selectable.set(false);
+    fixture.componentInstance.showFavoriteToggle.set(true);
+    fixture.detectChanges();
+
+    const favorite = fixture.nativeElement.querySelector(
+      '.recipe-card-favorite'
+    ) as HTMLButtonElement;
+
+    expect(favorite.classList).toContain('recipe-card-favorite--active');
+    expect(favorite.getAttribute('aria-pressed')).toBe('true');
+    expect(favorite.querySelector('svg')?.classList).toContain('ui-icon--filled');
+  });
+
+  it('preserves library return context when opening a recipe', async () => {
+    fixture.componentInstance.selectable.set(false);
+    fixture.componentInstance.detailQueryParams.set({ returnTo: '/favorites' });
+    fixture.detectChanges();
+
+    const detailLink = fixture.nativeElement.querySelector(
+      '.recipe-card-detail-link'
+    ) as HTMLAnchorElement;
+
+    detailLink.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/meals/recipe-1?returnTo=%2Ffavorites');
   });
 });

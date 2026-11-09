@@ -54,7 +54,11 @@ import { UiIconName } from '../../ui/ui-types';
       </article>
     } @else {
       <article class="recipe-card">
-        <a class="recipe-card-detail-link" [routerLink]="['/meals', recipe().id]">
+        <a
+          class="recipe-card-detail-link"
+          [routerLink]="detailLink() ?? ['/meals', recipe().id]"
+          [queryParams]="detailQueryParams()"
+        >
           <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
         </a>
         @if (showFavoriteToggle()) {

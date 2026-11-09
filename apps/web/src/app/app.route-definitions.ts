@@ -46,7 +46,8 @@ export function buildRoutes(includeDesignSystem: boolean): Routes {
         import('./pages/recipes/recipe-library-page.component').then(
           (module) => module.RecipeLibraryPageComponent
         ),
-      title: mealPlannerPageTitle('Recipes')
+      title: mealPlannerPageTitle('Recipes'),
+      data: { recipeScope: 'all' }
     },
     {
       path: 'meals/:recipeId',
@@ -70,8 +71,12 @@ export function buildRoutes(includeDesignSystem: boolean): Routes {
     },
     {
       path: 'favorites',
-      redirectTo: 'recipes',
-      pathMatch: 'full'
+      loadComponent: () =>
+        import('./pages/recipes/recipe-library-page.component').then(
+          (module) => module.RecipeLibraryPageComponent
+        ),
+      title: mealPlannerPageTitle('Favorites'),
+      data: { recipeScope: 'favorites' }
     },
     {
       path: 'recipes/:recipeId',
