@@ -31,7 +31,7 @@ import { RecipeFavoriteButtonComponent } from './recipe-favorite-button.componen
       </a>
       <div class="recipe-card-body">
         <h2>{{ recipe().title }}</h2>
-        @if (!selectable() && showFavoriteToggle()) {
+        @if (showFavoriteToggle()) {
           <app-recipe-favorite-button
             [recipeTitle]="recipe().title"
             [favorite]="recipe().isFavorite"

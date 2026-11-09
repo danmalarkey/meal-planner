@@ -17,7 +17,10 @@ import { RecipeCardComponent } from '../recipes/recipe-card.component';
       [selectionAriaLabel]="cookedActionLabel()"
       [detailLink]="['/recipes', meal().recipe.id]"
       [detailQueryParams]="detailQueryParams()"
+      [showFavoriteToggle]="true"
+      [favoritePending]="favoritePending()"
       (selectionChange)="cookedChange.emit($event)"
+      (favoriteChange)="favoriteChange.emit($event)"
     ></app-recipe-card>
   `,
   styleUrl: './planned-meal-card.component.scss',
@@ -27,7 +30,9 @@ export class PlannedMealCardComponent {
   readonly meal = input.required<PlannedMeal>();
   readonly planWeek = input.required<string>();
   readonly updating = input(false);
+  readonly favoritePending = input(false);
   readonly cookedChange = output<boolean>();
+  readonly favoriteChange = output<boolean>();
 
   protected cookedActionLabel(): string {
     if (this.updating()) return `Saving cooked state for ${this.meal().recipe.title}`;

@@ -22,6 +22,7 @@ import {
   startOfMealPlanWeek,
   toLocalDateKey
 } from '../../core/meal-plans/meal-plan-week';
+import { RecipeRepositoryService } from '../../core/recipes/recipe-repository.service';
 import { MealThumbnailStackComponent } from '../../features/meal-plans/meal-thumbnail-stack.component';
 import { PlannedMealCardComponent } from '../../features/meal-plans/planned-meal-card.component';
 import { WeekNavigationComponent } from '../../features/weeks/week-navigation.component';
@@ -97,7 +98,9 @@ import { UiToastService } from '../../ui/toast/ui-toast.service';
               [meal]="meal"
               [planWeek]="plan()!.startsOn"
               [updating]="updatingEntryId() === meal.entryId"
+              [favoritePending]="favoritePendingIds().has(meal.recipe.id)"
               (cookedChange)="setCooked(meal, $event)"
+              (favoriteChange)="setFavorite(meal, $event)"
             ></app-planned-meal-card>
           }
         </div>
@@ -158,6 +161,7 @@ export class MealPlanPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly mealPlans = inject(MealPlanRepositoryService);
+  private readonly recipes = inject(RecipeRepositoryService);
   private readonly toast = inject(UiToastService);
   private loadSequence = 0;
 
@@ -171,6 +175,7 @@ export class MealPlanPageComponent implements OnInit {
   protected readonly plan = signal<MealPlanWeek | null>(null);
   protected readonly loading = signal(true);
   protected readonly updatingEntryId = signal<string | null>(null);
+  protected readonly favoritePendingIds = signal<ReadonlySet<string>>(new Set());
   protected readonly copyingTo = signal<string | null>(null);
   protected readonly copyingSourceId = signal<string | null>(null);
   protected readonly recentPlans = signal<MealPlanWeek[]>([]);
@@ -220,6 +225,33 @@ export class MealPlanPageComponent implements OnInit {
       this.error.set(this.errorMessage(error));
     } finally {
       this.updatingEntryId.set(null);
+    }
+  }
+
+  protected async setFavorite(meal: PlannedMeal, favorite: boolean): Promise<void> {
+    this.favoritePendingIds.update((current) => new Set(current).add(meal.recipe.id));
+    try {
+      await this.recipes.setFavorite(meal.recipe.id, favorite);
+      this.plan.update((plan) =>
+        plan
+          ? {
+              ...plan,
+              meals: plan.meals.map((item) =>
+                item.recipe.id === meal.recipe.id
+                  ? { ...item, recipe: { ...item.recipe, isFavorite: favorite } }
+                  : item
+              )
+            }
+          : plan
+      );
+    } catch {
+      this.toast.error('Could not update this favorite. Try again.');
+    } finally {
+      this.favoritePendingIds.update((current) => {
+        const next = new Set(current);
+        next.delete(meal.recipe.id);
+        return next;
+      });
     }
   }
 

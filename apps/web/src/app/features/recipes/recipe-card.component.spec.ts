@@ -116,6 +116,20 @@ describe('RecipeCardComponent', () => {
     expect(favorite.closest('.recipe-card-body')).not.toBeNull();
   });
 
+  it('shows favorite state beside the title on selectable meal-plan cards', () => {
+    fixture.componentInstance.showFavoriteToggle.set(true);
+    fixture.detectChanges();
+
+    const favorite = fixture.nativeElement.querySelector(
+      '.recipe-favorite-button'
+    ) as HTMLButtonElement;
+
+    expect(favorite).not.toBeNull();
+    expect(favorite.getAttribute('aria-pressed')).toBe('true');
+    expect(favorite.closest('.recipe-card-body')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.recipe-card-selection')).not.toBeNull();
+  });
+
   it('preserves library return context when opening a recipe', async () => {
     fixture.componentInstance.selectable.set(false);
     fixture.componentInstance.detailQueryParams.set({ returnTo: '/favorites' });
