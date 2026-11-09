@@ -1,4 +1,3 @@
-import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { Params, RouterLink } from '@angular/router';
 import { RecipeSummary } from '../../core/recipes/recipe-repository.service';
@@ -8,34 +7,41 @@ import { RecipeFavoriteButtonComponent } from './recipe-favorite-button.componen
 
 @Component({
   selector: 'app-recipe-card',
-  imports: [NgTemplateOutlet, RecipeFavoriteButtonComponent, RouterLink, UiIconComponent],
+  imports: [RecipeFavoriteButtonComponent, RouterLink, UiIconComponent],
   template: `
-    <ng-template #cardContent>
-      <div class="recipe-card-media">
-        @if (recipe().imageUrl) {
-          <img [src]="recipe().imageUrl" [alt]="recipe().title" loading="lazy" />
-        } @else {
-          <div class="recipe-card-placeholder" aria-hidden="true">Recipe</div>
-        }
-      </div>
+    <article
+      class="recipe-card"
+      [class.recipe-card--selectable]="selectable()"
+      [class.recipe-card--selected]="selected()"
+      [class.recipe-card--dimmed]="dimmed()"
+    >
+      <a
+        class="recipe-card-detail-link"
+        [routerLink]="detailLink() ?? ['/recipes', recipe().id]"
+        [queryParams]="detailQueryParams()"
+        [attr.aria-label]="'View ' + recipe().title"
+      >
+        <div class="recipe-card-media">
+          @if (recipe().imageUrl) {
+            <img [src]="recipe().imageUrl" [alt]="recipe().title" loading="lazy" />
+          } @else {
+            <div class="recipe-card-placeholder" aria-hidden="true">Recipe</div>
+          }
+        </div>
+      </a>
       <div class="recipe-card-body">
         <h2>{{ recipe().title }}</h2>
+        @if (!selectable() && showFavoriteToggle()) {
+          <app-recipe-favorite-button
+            [recipeTitle]="recipe().title"
+            [favorite]="recipe().isFavorite"
+            [pending]="favoritePending()"
+            (favoriteChange)="favoriteChange.emit($event)"
+          ></app-recipe-favorite-button>
+        }
       </div>
-    </ng-template>
 
-    @if (selectable()) {
-      <article
-        class="recipe-card recipe-card--selectable"
-        [class.recipe-card--selected]="selected()"
-        [class.recipe-card--dimmed]="dimmed()"
-      >
-        <a
-          class="recipe-card-detail-link"
-          [routerLink]="detailLink() ?? ['/recipes', recipe().id]"
-          [queryParams]="detailQueryParams()"
-        >
-          <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
-        </a>
+      @if (selectable()) {
         <button
           type="button"
           class="recipe-card-selection"
@@ -52,27 +58,8 @@ import { RecipeFavoriteButtonComponent } from './recipe-favorite-button.componen
             <ui-icon [name]="selectionIdleIcon()!" size="sm"></ui-icon>
           }
         </button>
-      </article>
-    } @else {
-      <article class="recipe-card">
-        <a
-          class="recipe-card-detail-link"
-          [routerLink]="detailLink() ?? ['/recipes', recipe().id]"
-          [queryParams]="detailQueryParams()"
-        >
-          <ng-container [ngTemplateOutlet]="cardContent"></ng-container>
-        </a>
-        @if (showFavoriteToggle()) {
-          <app-recipe-favorite-button
-            class="recipe-card-favorite-control"
-            [recipeTitle]="recipe().title"
-            [favorite]="recipe().isFavorite"
-            [pending]="favoritePending()"
-            (favoriteChange)="favoriteChange.emit($event)"
-          ></app-recipe-favorite-button>
-        }
-      </article>
-    }
+      }
+    </article>
   `,
   styleUrl: './recipe-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

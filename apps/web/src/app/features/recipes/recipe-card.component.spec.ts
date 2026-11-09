@@ -113,6 +113,7 @@ describe('RecipeCardComponent', () => {
     expect(favorite.classList).toContain('recipe-favorite-button--active');
     expect(favorite.getAttribute('aria-pressed')).toBe('true');
     expect(favorite.querySelector('svg')?.classList).toContain('ui-icon--filled');
+    expect(favorite.closest('.recipe-card-body')).not.toBeNull();
   });
 
   it('preserves library return context when opening a recipe', async () => {
