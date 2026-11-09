@@ -22,14 +22,9 @@
 
 .grocery-list-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.grocery-list-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .grocery-list-tabs ui-chip {
