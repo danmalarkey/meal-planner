@@ -20,7 +20,7 @@ A board may receive items from its matching meal plan and may also contain manua
 
 ## Categories and destinations
 
-Categories answer **what kind of item is this?** Examples include Produce, Meat, Dairy, Pantry, and Household. The All items view groups items by category.
+Categories answer **what kind of item is this?** Examples include Produce, Meat, Dairy, Beverages, Pantry, and Household. The All items view groups items by category. Known ingredients inherit their stored category; manual entry may infer a category from recognizable names while keeping that field editable.
 
 Store destinations answer **where should we buy it?** Costco and Target are household-managed examples. Destinations persist across weeks, while an item's assignment belongs only to that week's grocery item.
 

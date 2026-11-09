@@ -27,6 +27,11 @@ export interface GroceryWeek {
   items: GroceryItem[];
 }
 
+export interface IngredientSuggestion {
+  name: string;
+  category: string | null;
+}
+
 interface GroceryItemRow {
   id: string;
   name: string;
@@ -50,25 +55,25 @@ const WEEK_CACHE_TTL_MS = 60 * 1000;
 export class GroceryRepositoryService {
   private readonly client = inject<SupabaseClient | null>(SUPABASE_CLIENT, { optional: true });
   private readonly household = inject(HouseholdContextService);
-  private ingredientNamesPromise: Promise<string[]> | null = null;
+  private ingredientSuggestionsPromise: Promise<IngredientSuggestion[]> | null = null;
   private readonly weekByStartsOn = new Map<string, CachedGroceryWeek>();
   private readonly weekRequestByStartsOn = new Map<string, Promise<GroceryWeek>>();
 
   constructor() {
     this.client?.auth.onAuthStateChange((event) => {
       if (event !== 'SIGNED_OUT') return;
-      this.ingredientNamesPromise = null;
+      this.ingredientSuggestionsPromise = null;
       this.weekByStartsOn.clear();
       this.weekRequestByStartsOn.clear();
     });
   }
 
-  listIngredientNames(): Promise<string[]> {
-    this.ingredientNamesPromise ??= this.loadIngredientNames().catch((error) => {
-      this.ingredientNamesPromise = null;
+  listIngredientSuggestions(): Promise<IngredientSuggestion[]> {
+    this.ingredientSuggestionsPromise ??= this.loadIngredientSuggestions().catch((error) => {
+      this.ingredientSuggestionsPromise = null;
       throw error;
     });
-    return this.ingredientNamesPromise;
+    return this.ingredientSuggestionsPromise;
   }
 
   getWeek(startsOn: string): Promise<GroceryWeek> {
@@ -312,16 +317,26 @@ export class GroceryRepositoryService {
     this.weekRequestByStartsOn.delete(startsOn);
   }
 
-  private async loadIngredientNames(): Promise<string[]> {
+  private async loadIngredientSuggestions(): Promise<IngredientSuggestion[]> {
     const household = await this.household.get();
     const { data, error } = await this.requiredClient()
       .from('ingredients')
-      .select('name')
+      .select('name,category')
       .eq('household_id', household.id)
       .order('name');
 
     if (error) throw error;
-    return [...new Set((data ?? []).map((ingredient) => ingredient.name as string))];
+    const suggestions = new Map<string, IngredientSuggestion>();
+    for (const ingredient of data ?? []) {
+      const name = ingredient.name as string;
+      const key = name.trim().toLocaleLowerCase();
+      const category = ingredient.category as string | null;
+      const existing = suggestions.get(key);
+      if (!existing || (!existing.category && category)) {
+        suggestions.set(key, { name, category });
+      }
+    }
+    return [...suggestions.values()];
   }
 
   private requiredClient(): SupabaseClient {

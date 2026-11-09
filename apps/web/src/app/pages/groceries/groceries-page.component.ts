@@ -11,8 +11,13 @@ import {
   GroceryDestination,
   GroceryItem,
   GroceryRepositoryService,
-  GroceryWeek
+  GroceryWeek,
+  IngredientSuggestion
 } from '../../core/groceries/grocery-repository.service';
+import {
+  GROCERY_CATEGORIES,
+  inferGroceryCategory
+} from '../../core/groceries/grocery-categories';
 import {
   addMealPlanWeeks,
   fromLocalDateKey,
@@ -40,26 +45,6 @@ type GroceryGroup = {
   remaining: GroceryItem[];
   completed: GroceryItem[];
 };
-
-const GROCERY_CATEGORIES = [
-  'Produce',
-  'Meat & Poultry',
-  'Seafood',
-  'Dairy & Eggs',
-  'Dairy & Alternatives',
-  'Bakery & Bread',
-  'Pasta, Rice & Grains',
-  'Canned & Jarred',
-  'Condiments & Sauces',
-  'Spices & Seasonings',
-  'Baking',
-  'Nuts, Seeds & Dried Fruit',
-  'Frozen',
-  'Snacks & Breakfast',
-  'Pantry & Other',
-  'Household',
-  'Other'
-] as const;
 
 @Component({
   selector: 'app-groceries-page',
@@ -334,9 +319,9 @@ const GROCERY_CATEGORIES = [
           [value]="manualName()"
           placeholder="What do you need?"
           [autofocusTarget]="true"
-          [suggestions]="ingredientSuggestions()"
+          [suggestions]="ingredientSuggestionNames()"
           suggestionsLabel="Ingredients"
-          (valueChange)="manualName.set($event)"
+          (valueChange)="setManualName($event)"
           (submitted)="saveManualItem()"
         ></ui-input>
         <ui-input
@@ -349,7 +334,7 @@ const GROCERY_CATEGORIES = [
           label="Category"
           [value]="manualCategory()"
           [options]="categoryOptions"
-          (valueChange)="manualCategory.set($event ?? 'Other')"
+          (valueChange)="setManualCategory($event)"
         ></ui-select>
         @if (board()?.destinations?.length) {
           <ui-select
@@ -397,7 +382,7 @@ const GROCERY_CATEGORIES = [
           label="Item"
           [value]="editName()"
           [autofocusTarget]="true"
-          [suggestions]="ingredientSuggestions()"
+          [suggestions]="ingredientSuggestionNames()"
           [showSuggestionsOnFocus]="true"
           suggestionsLabel="Ingredients"
           (valueChange)="editName.set($event)"
@@ -514,8 +499,9 @@ export class GroceriesPageComponent implements OnInit {
   protected readonly manualName = signal('');
   protected readonly manualAmount = signal('');
   protected readonly manualCategory = signal<string>('Other');
+  private readonly manualCategoryAutomatic = signal(true);
   protected readonly manualDestinationId = signal<string | null>(null);
-  protected readonly ingredientSuggestions = signal<string[]>([]);
+  protected readonly ingredientSuggestions = signal<IngredientSuggestion[]>([]);
   protected readonly savingManualItem = signal(false);
   protected readonly listDrawerOpen = signal(false);
   protected readonly newListName = signal('');
@@ -533,6 +519,17 @@ export class GroceriesPageComponent implements OnInit {
     value: category,
     label: category
   }));
+  protected readonly ingredientSuggestionNames = computed(() =>
+    this.ingredientSuggestions().map((ingredient) => ingredient.name)
+  );
+  private readonly ingredientCategoryByName = computed(
+    () => new Map(
+      this.ingredientSuggestions().map((ingredient) => [
+        ingredient.name.trim().toLocaleLowerCase(),
+        ingredient.category
+      ])
+    )
+  );
 
   protected readonly selectedStartsOn = computed(() => toLocalDateKey(this.selectedWeek()));
   protected readonly weekNavigationLabel = computed(() =>
@@ -765,11 +762,24 @@ export class GroceriesPageComponent implements OnInit {
     this.manualName.set('');
     this.manualAmount.set('');
     this.manualCategory.set('Other');
+    this.manualCategoryAutomatic.set(true);
     this.manualDestinationId.set(
       this.activeDestinationId() === 'all' ? null : this.activeDestinationId()
     );
     this.manualDrawerOpen.set(true);
     void this.loadIngredientSuggestions();
+  }
+
+  protected setManualName(name: string): void {
+    this.manualName.set(name);
+    if (this.manualCategoryAutomatic()) {
+      this.manualCategory.set(this.inferredCategory(name));
+    }
+  }
+
+  protected setManualCategory(category: string | null): void {
+    this.manualCategoryAutomatic.set(false);
+    this.manualCategory.set(category ?? 'Other');
   }
 
   protected openEditItem(item: GroceryItem): void {
@@ -943,10 +953,18 @@ export class GroceriesPageComponent implements OnInit {
   private async loadIngredientSuggestions(): Promise<void> {
     if (this.ingredientSuggestions().length > 0) return;
     try {
-      this.ingredientSuggestions.set(await this.groceries.listIngredientNames());
+      this.ingredientSuggestions.set(await this.groceries.listIngredientSuggestions());
+      if (this.manualDrawerOpen() && this.manualCategoryAutomatic()) {
+        this.manualCategory.set(this.inferredCategory(this.manualName()));
+      }
     } catch {
       // Suggestions are optional; item entry remains fully usable without them.
     }
+  }
+
+  private inferredCategory(name: string): string {
+    const knownCategory = this.ingredientCategoryByName().get(name.trim().toLocaleLowerCase());
+    return inferGroceryCategory(name, knownCategory);
   }
 
   private resetViewState(): void {
