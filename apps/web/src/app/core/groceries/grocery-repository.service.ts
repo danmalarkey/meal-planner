@@ -39,36 +39,79 @@ interface GroceryItemRow {
   gotten_at: string | null;
 }
 
+interface CachedGroceryWeek {
+  value: GroceryWeek;
+  expiresAt: number;
+}
+
+const WEEK_CACHE_TTL_MS = 60 * 1000;
+
 @Injectable({ providedIn: 'root' })
 export class GroceryRepositoryService {
   private readonly client = inject<SupabaseClient | null>(SUPABASE_CLIENT, { optional: true });
   private readonly household = inject(HouseholdContextService);
   private ingredientNamesPromise: Promise<string[]> | null = null;
+  private readonly weekByStartsOn = new Map<string, CachedGroceryWeek>();
+  private readonly weekRequestByStartsOn = new Map<string, Promise<GroceryWeek>>();
+
+  constructor() {
+    this.client?.auth.onAuthStateChange((event) => {
+      if (event !== 'SIGNED_OUT') return;
+      this.ingredientNamesPromise = null;
+      this.weekByStartsOn.clear();
+      this.weekRequestByStartsOn.clear();
+    });
+  }
 
   listIngredientNames(): Promise<string[]> {
-    this.ingredientNamesPromise ??= this.loadIngredientNames();
+    this.ingredientNamesPromise ??= this.loadIngredientNames().catch((error) => {
+      this.ingredientNamesPromise = null;
+      throw error;
+    });
     return this.ingredientNamesPromise;
   }
 
-  async getWeek(startsOn: string): Promise<GroceryWeek> {
+  getWeek(startsOn: string): Promise<GroceryWeek> {
+    const now = Date.now();
+    const cached = this.weekByStartsOn.get(startsOn);
+    if (cached && cached.expiresAt > now) return Promise.resolve(cached.value);
+    this.weekByStartsOn.delete(startsOn);
+
+    const pending = this.weekRequestByStartsOn.get(startsOn);
+    if (pending) return pending;
+
+    const request = this.loadWeek(startsOn)
+      .then((week) => {
+        this.weekByStartsOn.set(startsOn, {
+          value: week,
+          expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+        });
+        return week;
+      })
+      .finally(() => this.weekRequestByStartsOn.delete(startsOn));
+    this.weekRequestByStartsOn.set(startsOn, request);
+    return request;
+  }
+
+  private async loadWeek(startsOn: string): Promise<GroceryWeek> {
     const client = this.requiredClient();
     const household = await this.household.get();
-    const destinationResult = await client
-      .from('grocery_destinations')
-      .select('id,name')
-      .eq('household_id', household.id)
-      .is('archived_at', null)
-      .order('name');
+    const [destinationResult, weekResult] = await Promise.all([
+      client
+        .from('grocery_destinations')
+        .select('id,name')
+        .eq('household_id', household.id)
+        .is('archived_at', null)
+        .order('name'),
+      client
+        .from('grocery_weeks')
+        .select('id,starts_on')
+        .eq('household_id', household.id)
+        .eq('starts_on', startsOn)
+        .maybeSingle()
+    ]);
 
     if (destinationResult.error) throw destinationResult.error;
-
-    const weekResult = await client
-      .from('grocery_weeks')
-      .select('id,starts_on')
-      .eq('household_id', household.id)
-      .eq('starts_on', startsOn)
-      .maybeSingle();
-
     if (weekResult.error) throw weekResult.error;
 
     const destinations = (destinationResult.data ?? []) as GroceryDestination[];
@@ -110,6 +153,7 @@ export class GroceryRepositoryService {
       p_starts_on: startsOn
     });
     if (error) throw error;
+    this.forgetWeek(startsOn);
     return this.getWeek(startsOn);
   }
 
@@ -143,6 +187,7 @@ export class GroceryRepositoryService {
       destination_id: input.destinationId
     });
     if (error) throw error;
+    this.forgetWeek(input.startsOn);
   }
 
   async createDestination(name: string): Promise<GroceryDestination> {
@@ -154,7 +199,20 @@ export class GroceryRepositoryService {
       .single();
 
     if (error) throw error;
-    return data as GroceryDestination;
+    const destination = data as GroceryDestination;
+    for (const [startsOn, cached] of this.weekByStartsOn) {
+      const week = cached.value;
+      this.weekByStartsOn.set(startsOn, {
+        value: {
+          ...week,
+          destinations: [...week.destinations, destination].sort((left, right) =>
+            left.name.localeCompare(right.name)
+          )
+        },
+        expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+      });
+    }
+    return destination;
   }
 
   async deleteDestination(destinationId: string): Promise<void> {
@@ -164,6 +222,19 @@ export class GroceryRepositoryService {
       .eq('id', destinationId);
 
     if (error) throw error;
+    for (const [startsOn, cached] of this.weekByStartsOn) {
+      const week = cached.value;
+      this.weekByStartsOn.set(startsOn, {
+        value: {
+          ...week,
+          destinations: week.destinations.filter((destination) => destination.id !== destinationId),
+          items: week.items.map((item) =>
+            item.destinationId === destinationId ? { ...item, destinationId: null } : item
+          )
+        },
+        expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+      });
+    }
   }
 
   async setGotten(itemId: string, gotten: boolean): Promise<void> {
@@ -172,6 +243,10 @@ export class GroceryRepositoryService {
       p_gotten: gotten
     });
     if (error) throw error;
+    const gottenAt = gotten ? new Date().toISOString() : null;
+    this.updateCachedItems((item) =>
+      item.id === itemId ? { ...item, gottenAt } : item
+    );
   }
 
   async assignDestination(itemIds: string[], destinationId: string | null): Promise<void> {
@@ -181,6 +256,10 @@ export class GroceryRepositoryService {
       p_destination_id: destinationId
     });
     if (error) throw error;
+    const selectedItemIds = new Set(itemIds);
+    this.updateCachedItems((item) =>
+      selectedItemIds.has(item.id) ? { ...item, destinationId } : item
+    );
   }
 
   async updateItem(
@@ -203,6 +282,34 @@ export class GroceryRepositoryService {
       .eq('id', itemId);
 
     if (error) throw error;
+    this.updateCachedItems((item) =>
+      item.id === itemId
+        ? {
+            ...item,
+            name: input.name.trim(),
+            category: input.category,
+            amountText: input.amountText?.trim() || null,
+            destinationId: input.destinationId
+          }
+        : item
+    );
+  }
+
+  private updateCachedItems(update: (item: GroceryItem) => GroceryItem): void {
+    for (const [startsOn, cached] of this.weekByStartsOn) {
+      this.weekByStartsOn.set(startsOn, {
+        value: {
+          ...cached.value,
+          items: cached.value.items.map(update)
+        },
+        expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+      });
+    }
+  }
+
+  private forgetWeek(startsOn: string): void {
+    this.weekByStartsOn.delete(startsOn);
+    this.weekRequestByStartsOn.delete(startsOn);
   }
 
   private async loadIngredientNames(): Promise<string[]> {

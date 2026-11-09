@@ -417,15 +417,16 @@ export class RecipeDetailPageComponent implements OnInit {
     }
 
     try {
-      const recipe = await this.repository.getRecipe(recipeId);
+      const [recipe, plan] = await Promise.all([
+        this.repository.getRecipe(recipeId),
+        this.hasPlannedMealContext && this.requestedPlanWeek
+          ? this.mealPlans.getWeek(this.requestedPlanWeek)
+          : Promise.resolve(null)
+      ]);
       this.recipe.set(recipe);
       if (recipe.baseServings === 2 || recipe.baseServings === 4 || recipe.baseServings === 6) {
         this.selectedServings.set(recipe.baseServings);
       }
-      const plan =
-        this.hasPlannedMealContext && this.requestedPlanWeek
-          ? await this.mealPlans.getWeek(this.requestedPlanWeek)
-          : null;
       if (plan && this.requestedMealPlanEntry) {
         const plannedMeal = plan.meals.find(
           (meal) => meal.entryId === this.requestedMealPlanEntry && meal.recipe.id === recipe.id

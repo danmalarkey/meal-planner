@@ -40,17 +40,77 @@ interface RecipeRow {
   dietary_metadata: { assessment?: unknown } | null;
 }
 
+interface SignedImageUrl {
+  url: string;
+  expiresAt: number;
+}
+
+interface ExpiringValue<T> {
+  value: T;
+  expiresAt: number;
+}
+
+interface ExpiringRequest<T> {
+  request: Promise<T>;
+  expiresAt: number;
+}
+
+const SIGNED_IMAGE_URL_TTL_MS = 50 * 60 * 1000;
+
 @Injectable({ providedIn: 'root' })
 export class RecipeRepositoryService {
   private readonly client = inject<SupabaseClient | null>(SUPABASE_CLIENT, { optional: true });
+  private recipeListRequest: ExpiringRequest<RecipeSummary[]> | null = null;
+  private readonly recipeSummaryById = new Map<string, ExpiringValue<RecipeSummary>>();
+  private readonly recipeDetailRequests = new Map<string, ExpiringRequest<RecipeDetail>>();
+  private readonly signedImageUrlByPath = new Map<string, SignedImageUrl>();
 
-  async listRecipes(): Promise<RecipeSummary[]> {
-    return this.loadRecipeSummaries();
+  constructor() {
+    this.client?.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') this.clearCache();
+    });
+  }
+
+  listRecipes(): Promise<RecipeSummary[]> {
+    const now = Date.now();
+    if (this.recipeListRequest && this.recipeListRequest.expiresAt > now) {
+      return this.recipeListRequest.request;
+    }
+
+    const request = this.loadRecipeSummaries()
+      .then((recipes) => {
+        this.rememberSummaries(recipes);
+        return recipes;
+      })
+      .catch((error) => {
+        this.recipeListRequest = null;
+        throw error;
+      });
+    this.recipeListRequest = {
+      request,
+      expiresAt: now + SIGNED_IMAGE_URL_TTL_MS
+    };
+    return request;
   }
 
   async getRecipeSummaries(recipeIds: string[]): Promise<RecipeSummary[]> {
     if (recipeIds.length === 0) return [];
-    return this.loadRecipeSummaries(recipeIds);
+
+    const now = Date.now();
+    const uniqueRecipeIds = [...new Set(recipeIds)];
+    if (this.recipeListRequest && this.recipeListRequest.expiresAt > now) {
+      await this.recipeListRequest.request;
+    } else {
+      const missingRecipeIds = uniqueRecipeIds.filter((recipeId) => !this.cachedSummary(recipeId, now));
+      if (missingRecipeIds.length > 0) {
+        this.rememberSummaries(await this.loadRecipeSummaries(missingRecipeIds));
+      }
+    }
+
+    return uniqueRecipeIds.flatMap((recipeId) => {
+      const recipe = this.cachedSummary(recipeId);
+      return recipe ? [recipe] : [];
+    });
   }
 
   private async loadRecipeSummaries(recipeIds?: string[]): Promise<RecipeSummary[]> {
@@ -72,30 +132,46 @@ export class RecipeRepositoryService {
     return rows.map((row) => this.summary(row, signedUrls));
   }
 
-  async getRecipe(recipeId: string): Promise<RecipeDetail> {
+  getRecipe(recipeId: string): Promise<RecipeDetail> {
+    const now = Date.now();
+    const cached = this.recipeDetailRequests.get(recipeId);
+    if (cached && cached.expiresAt > now) return cached.request;
+
+    const request = this.loadRecipe(recipeId).catch((error) => {
+      this.recipeDetailRequests.delete(recipeId);
+      throw error;
+    });
+    this.recipeDetailRequests.set(recipeId, {
+      request,
+      expiresAt: now + SIGNED_IMAGE_URL_TTL_MS
+    });
+    return request;
+  }
+
+  private async loadRecipe(recipeId: string): Promise<RecipeDetail> {
     const client = this.requiredClient();
-    // Supabase's browser auth client protects session reads with a navigator lock.
-    // Keep these requests ordered so several simultaneous token reads cannot race.
-    const recipeResult = await client
-      .from('recipes')
-      .select('id,title,minutes,base_servings,image_storage_path,dietary_metadata')
-      .eq('id', recipeId)
-      .single();
-    const ingredientResult = await client
-      .from('recipe_ingredients')
-      .select('position,normalized_quantity,normalized_unit,display_text,source_data')
-      .eq('recipe_id', recipeId)
-      .order('position');
-    const stepResult = await client
-      .from('recipe_steps')
-      .select('position,instruction')
-      .eq('recipe_id', recipeId)
-      .order('position');
-    const cookwareResult = await client
-      .from('recipe_cookware')
-      .select('position,name')
-      .eq('recipe_id', recipeId)
-      .order('position');
+    const [recipeResult, ingredientResult, stepResult, cookwareResult] = await Promise.all([
+      client
+        .from('recipes')
+        .select('id,title,minutes,base_servings,image_storage_path,dietary_metadata')
+        .eq('id', recipeId)
+        .single(),
+      client
+        .from('recipe_ingredients')
+        .select('position,normalized_quantity,normalized_unit,display_text,source_data')
+        .eq('recipe_id', recipeId)
+        .order('position'),
+      client
+        .from('recipe_steps')
+        .select('position,instruction')
+        .eq('recipe_id', recipeId)
+        .order('position'),
+      client
+        .from('recipe_cookware')
+        .select('position,name')
+        .eq('recipe_id', recipeId)
+        .order('position')
+    ]);
 
     if (recipeResult.error) throw recipeResult.error;
     if (ingredientResult.error) throw ingredientResult.error;
@@ -108,7 +184,7 @@ export class RecipeRepositoryService {
       row.image_storage_path ? [row.image_storage_path] : []
     );
 
-    return {
+    const recipe = {
       ...this.summary(row, signedUrls),
       ingredients: (ingredientResult.data ?? []).map((ingredient) => ({
         position: ingredient.position as number,
@@ -132,6 +208,29 @@ export class RecipeRepositoryService {
       }),
       cookware: (cookwareResult.data ?? []) as Array<{ position: number; name: string }>
     };
+    this.rememberSummaries([recipe]);
+    return recipe;
+  }
+
+  private rememberSummaries(recipes: RecipeSummary[]): void {
+    const expiresAt = Date.now() + SIGNED_IMAGE_URL_TTL_MS;
+    for (const recipe of recipes) {
+      this.recipeSummaryById.set(recipe.id, { value: recipe, expiresAt });
+    }
+  }
+
+  private cachedSummary(recipeId: string, now = Date.now()): RecipeSummary | null {
+    const cached = this.recipeSummaryById.get(recipeId);
+    if (cached && cached.expiresAt > now) return cached.value;
+    this.recipeSummaryById.delete(recipeId);
+    return null;
+  }
+
+  private clearCache(): void {
+    this.recipeListRequest = null;
+    this.recipeSummaryById.clear();
+    this.recipeDetailRequests.clear();
+    this.signedImageUrlByPath.clear();
   }
 
   private summary(row: RecipeRow, signedUrls: Map<string, string>): RecipeSummary {
@@ -152,17 +251,34 @@ export class RecipeRepositoryService {
   ): Promise<Map<string, string>> {
     if (paths.length === 0) return new Map();
 
-    const { data, error } = await client.storage.from('recipe-images').createSignedUrls(paths, 3600);
+    const now = Date.now();
+    const uniquePaths = [...new Set(paths)];
+    const signedUrls = new Map<string, string>();
+    const pathsToSign: string[] = [];
+
+    for (const path of uniquePaths) {
+      const cached = this.signedImageUrlByPath.get(path);
+      if (cached && cached.expiresAt > now) signedUrls.set(path, cached.url);
+      else pathsToSign.push(path);
+    }
+
+    if (pathsToSign.length === 0) return signedUrls;
+
+    const { data, error } = await client.storage
+      .from('recipe-images')
+      .createSignedUrls(pathsToSign, 3600);
     if (error) throw error;
 
-    return new Map(
-      (data ?? [])
-        .filter(
-          (item): item is typeof item & { path: string; signedUrl: string } =>
-            typeof item.path === 'string' && typeof item.signedUrl === 'string'
-        )
-        .map((item) => [item.path, item.signedUrl] as const)
-    );
+    for (const item of data ?? []) {
+      if (typeof item.path !== 'string' || typeof item.signedUrl !== 'string') continue;
+      signedUrls.set(item.path, item.signedUrl);
+      this.signedImageUrlByPath.set(item.path, {
+        url: item.signedUrl,
+        expiresAt: now + SIGNED_IMAGE_URL_TTL_MS
+      });
+    }
+
+    return signedUrls;
   }
 
   private requiredClient(): SupabaseClient {

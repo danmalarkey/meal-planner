@@ -769,6 +769,7 @@ export class GroceriesPageComponent implements OnInit {
       this.activeDestinationId() === 'all' ? null : this.activeDestinationId()
     );
     this.manualDrawerOpen.set(true);
+    void this.loadIngredientSuggestions();
   }
 
   protected openEditItem(item: GroceryItem): void {
@@ -778,6 +779,7 @@ export class GroceriesPageComponent implements OnInit {
     this.editCategory.set(item.category);
     this.editDestinationId.set(item.destinationId);
     this.editDrawerOpen.set(true);
+    void this.loadIngredientSuggestions();
   }
 
   protected async saveEditedItem(): Promise<void> {
@@ -928,15 +930,22 @@ export class GroceriesPageComponent implements OnInit {
     this.error.set(null);
     try {
       const board = await this.groceries.getWeek(this.selectedStartsOn());
-      const ingredientSuggestions = await this.groceries.listIngredientNames();
       if (sequence === this.loadSequence) {
         this.board.set(board);
-        this.ingredientSuggestions.set(ingredientSuggestions);
       }
     } catch (error) {
       if (sequence === this.loadSequence) this.error.set(this.errorMessage(error));
     } finally {
       if (sequence === this.loadSequence) this.loading.set(false);
+    }
+  }
+
+  private async loadIngredientSuggestions(): Promise<void> {
+    if (this.ingredientSuggestions().length > 0) return;
+    try {
+      this.ingredientSuggestions.set(await this.groceries.listIngredientNames());
+    } catch {
+      // Suggestions are optional; item entry remains fully usable without them.
     }
   }
 

@@ -31,18 +31,65 @@ interface MealPlanEntryRow {
   cooked_at: string | null;
 }
 
+interface MealPlanRow {
+  id: string;
+  starts_on: string;
+  entries: MealPlanEntryRow[];
+}
+
+interface CachedMealPlanWeek {
+  value: MealPlanWeek;
+  expiresAt: number;
+}
+
+const WEEK_CACHE_TTL_MS = 60 * 1000;
+
 @Injectable({ providedIn: 'root' })
 export class MealPlanRepositoryService {
   private readonly client = inject<SupabaseClient | null>(SUPABASE_CLIENT, { optional: true });
   private readonly household = inject(HouseholdContextService);
   private readonly recipes = inject(RecipeRepositoryService);
+  private readonly weekByStartsOn = new Map<string, CachedMealPlanWeek>();
+  private readonly weekRequestByStartsOn = new Map<string, Promise<MealPlanWeek>>();
 
-  async getWeek(startsOn: string): Promise<MealPlanWeek> {
+  constructor() {
+    this.client?.auth.onAuthStateChange((event) => {
+      if (event !== 'SIGNED_OUT') return;
+      this.weekByStartsOn.clear();
+      this.weekRequestByStartsOn.clear();
+    });
+  }
+
+  getWeek(startsOn: string): Promise<MealPlanWeek> {
+    const now = Date.now();
+    const cached = this.weekByStartsOn.get(startsOn);
+    if (cached && cached.expiresAt > now) return Promise.resolve(cached.value);
+    this.weekByStartsOn.delete(startsOn);
+
+    const pending = this.weekRequestByStartsOn.get(startsOn);
+    if (pending) return pending;
+
+    const request = this.loadWeek(startsOn)
+      .then((week) => {
+        this.weekByStartsOn.set(startsOn, {
+          value: week,
+          expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+        });
+        return week;
+      })
+      .finally(() => this.weekRequestByStartsOn.delete(startsOn));
+    this.weekRequestByStartsOn.set(startsOn, request);
+    return request;
+  }
+
+  private async loadWeek(startsOn: string): Promise<MealPlanWeek> {
     const client = this.requiredClient();
     const household = await this.household.get();
     const planResult = await client
       .from('meal_plans')
-      .select('id,starts_on')
+      .select(
+        'id,starts_on,entries:meal_plan_entries(id,recipe_id,position,planned_servings,scheduled_for,cooked_at)'
+      )
       .eq('household_id', household.id)
       .eq('starts_on', startsOn)
       .maybeSingle();
@@ -50,15 +97,8 @@ export class MealPlanRepositoryService {
     if (planResult.error) throw planResult.error;
     if (!planResult.data) return { id: null, startsOn, meals: [] };
 
-    const entriesResult = await client
-      .from('meal_plan_entries')
-      .select('id,recipe_id,position,planned_servings,scheduled_for,cooked_at')
-      .eq('meal_plan_id', planResult.data.id)
-      .order('position');
-
-    if (entriesResult.error) throw entriesResult.error;
-
-    const entries = (entriesResult.data ?? []) as MealPlanEntryRow[];
+    const plan = planResult.data as unknown as MealPlanRow;
+    const entries = [...(plan.entries ?? [])].sort((left, right) => left.position - right.position);
     const recipeById = new Map(
       (await this.recipes.getRecipeSummaries(entries.map((entry) => entry.recipe_id))).map(
         (recipe) => [recipe.id, recipe] as const
@@ -66,8 +106,8 @@ export class MealPlanRepositoryService {
     );
 
     return {
-      id: planResult.data.id as string,
-      startsOn: planResult.data.starts_on as string,
+      id: plan.id,
+      startsOn: plan.starts_on,
       meals: entries.flatMap((entry) => {
         const recipe = recipeById.get(entry.recipe_id);
         return recipe
@@ -132,6 +172,7 @@ export class MealPlanRepositoryService {
     );
 
     if (entriesResult.error) throw entriesResult.error;
+    this.forgetWeek(startsOn);
     return this.getWeek(startsOn);
   }
 
@@ -141,6 +182,21 @@ export class MealPlanRepositoryService {
       p_cooked: cooked
     });
     if (error) throw error;
+
+    const cookedAt = cooked ? new Date().toISOString() : null;
+    for (const [startsOn, cached] of this.weekByStartsOn) {
+      const week = cached.value;
+      if (!week.meals.some((meal) => meal.entryId === entryId)) continue;
+      this.weekByStartsOn.set(startsOn, {
+        value: {
+          ...week,
+          meals: week.meals.map((meal) =>
+            meal.entryId === entryId ? { ...meal, cookedAt } : meal
+          )
+        },
+        expiresAt: Date.now() + WEEK_CACHE_TTL_MS
+      });
+    }
   }
 
   async copyPlan(sourcePlanId: string, targetStartsOn: string): Promise<MealPlanWeek> {
@@ -154,6 +210,7 @@ export class MealPlanRepositoryService {
       p_target_starts_on: targetStartsOn
     });
     if (error) throw error;
+    this.forgetWeek(targetStartsOn);
     return this.getWeek(targetStartsOn);
   }
 
@@ -178,6 +235,14 @@ export class MealPlanRepositoryService {
   async deletePlan(planId: string): Promise<void> {
     const { error } = await this.requiredClient().from('meal_plans').delete().eq('id', planId);
     if (error) throw error;
+    for (const [startsOn, cached] of this.weekByStartsOn) {
+      if (cached.value.id === planId) this.forgetWeek(startsOn);
+    }
+  }
+
+  private forgetWeek(startsOn: string): void {
+    this.weekByStartsOn.delete(startsOn);
+    this.weekRequestByStartsOn.delete(startsOn);
   }
 
   private requiredClient(): SupabaseClient {
