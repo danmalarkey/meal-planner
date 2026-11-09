@@ -67,7 +67,7 @@ import { UiIconName } from '../../ui/ui-types';
             [attr.aria-pressed]="recipe().isFavorite"
             (click)="favoriteChange.emit(!recipe().isFavorite)"
           >
-            <ui-icon name="star" size="sm"></ui-icon>
+            <ui-icon name="star" size="sm" [filled]="recipe().isFavorite"></ui-icon>
           </button>
         }
       </article>

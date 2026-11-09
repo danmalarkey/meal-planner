@@ -93,6 +93,7 @@ export const UI_ICONS: Record<UiIconName, LucideIconData> = {
       class="ui-icon"
       [class.ui-icon--sm]="size() === 'sm'"
       [class.ui-icon--lg]="size() === 'lg'"
+      [class.ui-icon--filled]="filled()"
       [size]="iconSize()"
       [strokeWidth]="1.75"
       [title]="decorative() ? null : ariaLabel()"
@@ -106,6 +107,7 @@ export const UI_ICONS: Record<UiIconName, LucideIconData> = {
 export class UiIconComponent {
   readonly name = input.required<UiIconName>();
   readonly size = input<UiSize>('md');
+  readonly filled = input(false);
   readonly decorative = input(true);
   readonly ariaLabel = input<string | undefined>(undefined);
 
