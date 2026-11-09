@@ -1,4 +1,6 @@
 .ui-input {
+  --ui-input-control-height: var(--control-height-md);
+
   position: relative;
   display: grid;
   gap: var(--space-2);
@@ -26,6 +28,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: var(--ui-input-control-height);
   padding: 0 var(--space-3);
   border: var(--border-default);
   border-radius: var(--radius-md);
@@ -44,7 +47,7 @@
 
 .ui-input-field {
   width: 100%;
-  min-height: var(--control-height-md);
+  min-height: calc(var(--ui-input-control-height) - (var(--border-width) * 2));
   padding: 0;
   border: none;
   background: transparent;
@@ -155,20 +158,19 @@
   background: transparent;
 }
 
-.ui-input--sm .ui-input-field,
-.ui-input--sm .ui-input-field-wrap {
-  min-height: var(--control-height-sm);
+.ui-input--sm {
+  --ui-input-control-height: var(--control-height-sm);
+
   font-size: var(--font-size-sm);
 }
 
-.ui-input--md .ui-input-field,
-.ui-input--md .ui-input-field-wrap {
-  min-height: var(--control-height-md);
+.ui-input--md {
+  --ui-input-control-height: var(--control-height-md);
 }
 
-.ui-input--lg .ui-input-field,
-.ui-input--lg .ui-input-field-wrap {
-  min-height: var(--control-height-lg);
+.ui-input--lg {
+  --ui-input-control-height: var(--control-height-lg);
+
   font-size: var(--font-size-lg);
 }
 
