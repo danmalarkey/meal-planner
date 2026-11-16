@@ -107,14 +107,14 @@ type GroceryGroup = {
                 <button type="button" class="ui-popover-action" role="menuitem" (click)="openManualItem()">
                   Add item
                 </button>
-                @if (!hasMealPlanItems() && (board()?.items?.length ?? 0) > 0) {
+                @if (hasMealPlanItems() || (board()?.items?.length ?? 0) > 0) {
                   <button
                     type="button"
                     class="ui-popover-action"
                     role="menuitem"
                     [disabled]="syncing()"
                     (click)="addMealPlanGroceries()"
-                  >Add meal ingredients</button>
+                  >{{ hasMealPlanItems() ? 'Refresh meal ingredients' : 'Add meal ingredients' }}</button>
                 }
                 @if ((board()?.items?.length ?? 0) > 0) {
                   <button type="button" class="ui-popover-action" role="menuitem" (click)="toggleSelecting()">
@@ -610,6 +610,7 @@ export class GroceriesPageComponent implements OnInit {
   }
 
   protected async addMealPlanGroceries(): Promise<void> {
+    const refreshing = this.hasMealPlanItems();
     this.syncing.set(true);
     this.error.set(null);
     try {
@@ -617,6 +618,8 @@ export class GroceriesPageComponent implements OnInit {
       this.board.set(board);
       if (!board.items.some((item) => item.sourceKind === 'meal_plan')) {
         this.toast.info('No meal-plan ingredients were found for this week.');
+      } else if (refreshing) {
+        this.toast.success('Meal ingredients refreshed.');
       }
     } catch (error) {
       this.error.set(this.errorMessage(error));

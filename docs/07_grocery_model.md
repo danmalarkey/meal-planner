@@ -44,7 +44,7 @@ Category and store are independent dimensions. Moving apples to Costco does not 
 
 Generating groceries is explicit and idempotent. Repeating **Add groceries** for the same week updates the meal-plan-derived items instead of creating duplicates, while preserving their store assignment and Gotten state.
 
-The first version combines an ingredient only when its canonical ingredient identity and normalized unit match. Qualitative or incompatible amounts remain separate rather than guessing a conversion. Source-marked pantry staples are omitted. Every generated item retains links to the planned meals and recipe ingredients that contributed to it.
+The first version combines quantified ingredients only when their canonical ingredient identity and normalized unit match. When an amount is unavailable, repeated occurrences of the same canonical ingredient collapse into one name-only grocery item rather than creating one row per recipe. Source-marked pantry staples remain omitted except for **Spices & Seasonings**; seasonings stay visible because the application cannot assume the household already has them. Every generated item retains links to the planned meals and recipe ingredients that contributed to it.
 
 ## Planned data boundaries
 

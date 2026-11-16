@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-11-16 — Grocery generation includes seasonings and merges amount-less duplicates
+
+- Status: Partially implemented — hosted generation rule and November 15 reconciliation applied November 16, 2026; frontend deployment pending
+- Decision: Meal-plan grocery generation includes ingredients categorized as **Spices & Seasonings** even when their source marks them as pantry staples. Repeated amount-less occurrences of the same canonical ingredient produce one name-only grocery item; quantified occurrences continue adding together only when their normalized units match. Distinct canonical ingredients, such as mayonnaise and vegan mayonnaise, remain separate.
+- Why it matters: The grocery list must not silently omit required seasonings or create duplicate shelf-item rows simply because imported recipes lack normalized amounts.
+- Canonical references: `docs/07_grocery_model.md`, `supabase/migrations/20261116130000_include_seasonings_and_merge_qualitative_groceries.sql`, `supabase/migrations/20261116133000_reconcile_existing_grocery_weeks.sql`, `supabase/tests/grocery_generation_rules.sql`, `apps/web/src/app/pages/groceries/groceries-page.component.ts`
+- Follow-up trigger: Deploy the grocery refresh action and validate regeneration after the next meal-plan change. Revisit cross-unit conversion only when real recipes require it.
+
 ## 2026-11-09 — Recipes is the shared library and favorites are personal
 
 - Status: Active — implemented; hosted schema applied
@@ -27,7 +35,7 @@
 ## 2026-11-08 — Grocery completion is reversible and filtered in place
 
 - Status: Active — implemented; hosted schema applied
-- Decision: Marking a grocery item **Gotten** gives that weekly item a reversible completion timestamp. Gotten items are hidden by default and explicitly shown or hidden for the active list from its overflow menu; category titles remain visible and carry totals such as **Produce 12**. The same menu owns add, batch move, and new-list actions. Tapping a row opens weekly item editing, including its optional store list, while multi-select remains available for faster batch assignment. Groceries reuse Meal Plan's arrow-based week header and manual entry suggests canonical household ingredients. Meal-plan generation combines only canonical ingredients with matching normalized units, omits source-marked pantry staples, preserves provenance, and is idempotent so regeneration retains store and completion state.
+- Decision: Marking a grocery item **Gotten** gives that weekly item a reversible completion timestamp. Gotten items are hidden by default and explicitly shown or hidden for the active list from its overflow menu; category titles remain visible and carry totals such as **Produce 12**. The same menu owns add, batch move, and new-list actions. Tapping a row opens weekly item editing, including its optional store list, while multi-select remains available for faster batch assignment. Groceries reuse Meal Plan's arrow-based week header and manual entry suggests canonical household ingredients. Meal-plan generation combines canonical ingredients with matching normalized units, collapses repeated amount-less occurrences into one name-only item, includes pantry-marked spices and seasonings, preserves provenance, and is idempotent so regeneration retains store and completion state.
 - Why it matters: The shopping view stays focused on what remains without deleting history, splitting the source of truth, or letting All items and store views drift apart.
 - Canonical references: `docs/07_grocery_model.md`, `supabase/migrations/20261108090000_grocery_foundation.sql`
 - Follow-up trigger: Revisit unit conversion, pantry overrides, and recurring basics only after the initial weekly shopping flow is in regular use.
