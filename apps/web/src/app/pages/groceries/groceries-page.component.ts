@@ -96,7 +96,6 @@ type GroceryGroup = {
             <ui-popover
               placement="bottom-end"
               panelRole="menu"
-              autoClose="inside"
               triggerLabel="Grocery actions"
               panelLabel="Grocery actions"
             >
@@ -107,15 +106,6 @@ type GroceryGroup = {
                 <button type="button" class="ui-popover-action" role="menuitem" (click)="openManualItem()">
                   Add item
                 </button>
-                @if (hasMealPlanItems() || (board()?.items?.length ?? 0) > 0) {
-                  <button
-                    type="button"
-                    class="ui-popover-action"
-                    role="menuitem"
-                    [disabled]="syncing()"
-                    (click)="addMealPlanGroceries()"
-                  >{{ hasMealPlanItems() ? 'Refresh meal ingredients' : 'Add meal ingredients' }}</button>
-                }
                 @if ((board()?.items?.length ?? 0) > 0) {
                   <button type="button" class="ui-popover-action" role="menuitem" (click)="toggleSelecting()">
                     {{ selecting() ? 'Cancel moving items' : 'Move items' }}
@@ -258,10 +248,8 @@ type GroceryGroup = {
           <ui-empty-state
             icon="list"
             title="Your grocery list is empty"
-            [primaryCta]="{ label: 'Add groceries' }"
-            [secondaryCta]="{ label: 'Add an item' }"
-            (primaryClicked)="addMealPlanGroceries()"
-            (secondaryClicked)="openManualItem()"
+            [primaryCta]="{ label: 'Add item' }"
+            (primaryClicked)="openManualItem()"
           ></ui-empty-state>
         }
       }
@@ -382,9 +370,6 @@ type GroceryGroup = {
           label="Item"
           [value]="editName()"
           [autofocusTarget]="true"
-          [suggestions]="ingredientSuggestionNames()"
-          [showSuggestionsOnFocus]="true"
-          suggestionsLabel="Ingredients"
           (valueChange)="editName.set($event)"
           (submitted)="saveEditedItem()"
         ></ui-input>
@@ -484,7 +469,6 @@ export class GroceriesPageComponent implements OnInit {
   );
   protected readonly board = signal<GroceryWeek | null>(null);
   protected readonly loading = signal(true);
-  protected readonly syncing = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly showGottenItems = signal(false);
   protected readonly recentlyGottenItemIds = signal<ReadonlySet<string>>(new Set());
@@ -553,9 +537,6 @@ export class GroceriesPageComponent implements OnInit {
       ? null
       : this.board()?.destinations.find((destination) => destination.id === destinationId) ?? null;
   });
-  protected readonly hasMealPlanItems = computed(() =>
-    (this.board()?.items ?? []).some((item) => item.sourceKind === 'meal_plan')
-  );
   protected readonly itemsInActiveList = computed(() => {
     const items = this.board()?.items ?? [];
     const assignmentDestinationId = this.assignmentDestinationId();
@@ -607,25 +588,6 @@ export class GroceriesPageComponent implements OnInit {
       replaceUrl: true
     });
     void this.loadWeek();
-  }
-
-  protected async addMealPlanGroceries(): Promise<void> {
-    const refreshing = this.hasMealPlanItems();
-    this.syncing.set(true);
-    this.error.set(null);
-    try {
-      const board = await this.groceries.syncFromMealPlan(this.selectedStartsOn());
-      this.board.set(board);
-      if (!board.items.some((item) => item.sourceKind === 'meal_plan')) {
-        this.toast.info('No meal-plan ingredients were found for this week.');
-      } else if (refreshing) {
-        this.toast.success('Meal ingredients refreshed.');
-      }
-    } catch (error) {
-      this.error.set(this.errorMessage(error));
-    } finally {
-      this.syncing.set(false);
-    }
   }
 
   protected async setGotten(item: GroceryItem, gotten: boolean): Promise<void> {
@@ -792,7 +754,6 @@ export class GroceriesPageComponent implements OnInit {
     this.editCategory.set(item.category);
     this.editDestinationId.set(item.destinationId);
     this.editDrawerOpen.set(true);
-    void this.loadIngredientSuggestions();
   }
 
   protected async saveEditedItem(): Promise<void> {
@@ -942,7 +903,7 @@ export class GroceriesPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const board = await this.groceries.getWeek(this.selectedStartsOn());
+      const board = await this.groceries.syncFromMealPlan(this.selectedStartsOn());
       if (sequence === this.loadSequence) {
         this.board.set(board);
       }

@@ -1,12 +1,12 @@
 # Decision Log
 
-## 2026-11-16 — Grocery generation includes seasonings and merges amount-less duplicates
+## 2026-11-16 — Grocery generation is automatic, includes seasonings, and merges amount-less duplicates
 
-- Status: Partially implemented — hosted generation rule and November 15 reconciliation applied November 16, 2026; frontend deployment pending
-- Decision: Meal-plan grocery generation includes ingredients categorized as **Spices & Seasonings** even when their source marks them as pantry staples. Repeated amount-less occurrences of the same canonical ingredient produce one name-only grocery item; quantified occurrences continue adding together only when their normalized units match. Distinct canonical ingredients, such as mayonnaise and vegan mayonnaise, remain separate.
+- Status: Active — hosted generation rule, November 15 reconciliation, and automatic frontend reconciliation implemented November 16, 2026
+- Decision: Opening a grocery week automatically runs the existing idempotent meal-plan reconciliation, so planned ingredients require no separate add or refresh action. Manual items, store assignments, and Gotten state remain intact. Generation includes ingredients categorized as **Spices & Seasonings** even when their source marks them as pantry staples. Repeated amount-less occurrences of the same canonical ingredient produce one name-only grocery item; quantified occurrences continue adding together only when their normalized units match. Distinct canonical ingredients, such as mayonnaise and vegan mayonnaise, remain separate.
 - Why it matters: The grocery list must not silently omit required seasonings or create duplicate shelf-item rows simply because imported recipes lack normalized amounts.
 - Canonical references: `docs/07_grocery_model.md`, `supabase/migrations/20261116130000_include_seasonings_and_merge_qualitative_groceries.sql`, `supabase/migrations/20261116133000_reconcile_existing_grocery_weeks.sql`, `supabase/tests/grocery_generation_rules.sql`, `apps/web/src/app/pages/groceries/groceries-page.component.ts`
-- Follow-up trigger: Deploy the grocery refresh action and validate regeneration after the next meal-plan change. Revisit cross-unit conversion only when real recipes require it.
+- Follow-up trigger: Deploy and validate automatic reconciliation after the next meal-plan change. Revisit cross-unit conversion only when real recipes require it.
 
 ## 2026-11-09 — Recipes is the shared library and favorites are personal
 

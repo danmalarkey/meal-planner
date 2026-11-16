@@ -9,15 +9,15 @@
 
 .meal-thumbnail {
   display: grid;
-  width: var(--space-5);
-  height: var(--space-5);
+  width: var(--control-height-md);
+  height: var(--control-height-md);
   place-items: center;
   overflow: hidden;
   border: 0.125rem solid var(--color-surface);
   border-radius: var(--radius-pill);
   background: var(--color-surface-alt);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-caption);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }
 
