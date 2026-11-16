@@ -4,7 +4,8 @@ import {
   OnInit,
   computed,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -16,7 +17,8 @@ import {
 } from '../../core/groceries/grocery-repository.service';
 import {
   GROCERY_CATEGORIES,
-  inferGroceryCategory
+  inferGroceryCategory,
+  normalizeGroceryItemName
 } from '../../core/groceries/grocery-categories';
 import {
   addMealPlanWeeks,
@@ -93,42 +95,48 @@ type GroceryGroup = {
               }
             </nav>
 
-            <ui-popover
-              placement="bottom-end"
-              panelRole="menu"
-              triggerLabel="Grocery actions"
-              panelLabel="Grocery actions"
-            >
-              <span popover-trigger class="grocery-actions-trigger">
-                <ui-icon name="more"></ui-icon>
-              </span>
-              <div popover-panel class="grocery-actions-menu">
-                <button type="button" class="ui-popover-action" role="menuitem" (click)="openManualItem()">
-                  Add item
-                </button>
-                @if ((board()?.items?.length ?? 0) > 0) {
-                  <button type="button" class="ui-popover-action" role="menuitem" (click)="toggleSelecting()">
-                    {{ selecting() ? 'Cancel moving items' : 'Move items' }}
+            <div class="grocery-list-actions">
+              <ui-button
+                variant="ghost"
+                size="sm"
+                iconLeading="add"
+                ariaHasPopup="dialog"
+                (clicked)="openManualItem()"
+              >Add item</ui-button>
+              <ui-popover
+                placement="bottom-end"
+                panelRole="menu"
+                triggerLabel="Grocery actions"
+                panelLabel="Grocery actions"
+              >
+                <span popover-trigger class="grocery-actions-trigger">
+                  <ui-icon name="more"></ui-icon>
+                </span>
+                <div popover-panel class="grocery-actions-menu">
+                  @if ((board()?.items?.length ?? 0) > 0) {
+                    <button type="button" class="ui-popover-action" role="menuitem" (click)="toggleSelecting()">
+                      {{ selecting() ? 'Cancel moving items' : 'Move items' }}
+                    </button>
+                  }
+                  <button type="button" class="ui-popover-action" role="menuitem" (click)="openListDrawer()">
+                    New list
                   </button>
-                }
-                <button type="button" class="ui-popover-action" role="menuitem" (click)="openListDrawer()">
-                  New list
-                </button>
-                @if (activeDestination(); as destination) {
-                  <button
-                    type="button"
-                    class="ui-popover-action ui-popover-action--danger"
-                    role="menuitem"
-                    (click)="listToDelete.set(destination)"
-                  >Delete list</button>
-                }
-                @if (completedItemCount() > 0) {
-                  <button type="button" class="ui-popover-action" role="menuitem" (click)="showGottenItems.update(show => !show)">
-                    {{ showGottenItems() ? 'Hide gotten items' : 'Show gotten items' }}
-                  </button>
-                }
-              </div>
-            </ui-popover>
+                  @if (activeDestination(); as destination) {
+                    <button
+                      type="button"
+                      class="ui-popover-action ui-popover-action--danger"
+                      role="menuitem"
+                      (click)="listToDelete.set(destination)"
+                    >Delete list</button>
+                  }
+                  @if (completedItemCount() > 0) {
+                    <button type="button" class="ui-popover-action" role="menuitem" (click)="showGottenItems.update(show => !show)">
+                      {{ showGottenItems() ? 'Hide gotten items' : 'Show gotten items' }}
+                    </button>
+                  }
+                </div>
+              </ui-popover>
+            </div>
           </div>
         }
       </header>
@@ -203,8 +211,11 @@ type GroceryGroup = {
                         >
                           <span class="grocery-item-details">
                             <span class="grocery-item-name">{{ item.name }}</span>
-                            @if (activeDestinationId() === 'all' && destinationName(item.destinationId); as destination) {
-                              <span class="grocery-item-destination">{{ destination }}</span>
+                            @if (itemMeta(item); as meta) {
+                              <span
+                                class="grocery-item-meta"
+                                [class.grocery-item-meta--manual]="item.sourceKind === 'manual'"
+                              >{{ meta }}</span>
                             }
                           </span>
                           @if (amount(item); as itemAmount) {
@@ -215,8 +226,11 @@ type GroceryGroup = {
                         <button type="button" class="grocery-item-copy" (click)="openEditItem(item)">
                           <span class="grocery-item-details">
                             <span class="grocery-item-name">{{ item.name }}</span>
-                            @if (activeDestinationId() === 'all' && destinationName(item.destinationId); as destination) {
-                              <span class="grocery-item-destination">{{ destination }}</span>
+                            @if (itemMeta(item); as meta) {
+                              <span
+                                class="grocery-item-meta"
+                                [class.grocery-item-meta--manual]="item.sourceKind === 'manual'"
+                              >{{ meta }}</span>
                             }
                           </span>
                           @if (amount(item); as itemAmount) {
@@ -303,6 +317,7 @@ type GroceryGroup = {
     >
       <div class="grocery-drawer-fields">
         <ui-input
+          #manualItemInput
           label="Item"
           [value]="manualName()"
           placeholder="What do you need?"
@@ -336,10 +351,19 @@ type GroceryGroup = {
       </div>
       <div drawer-footer class="grocery-drawer-footer">
         <ui-button
+          class="grocery-drawer-add-another"
+          variant="secondary"
+          [fullWidth]="true"
+          [disabled]="!manualName().trim() || savingManualItem()"
+          [loading]="manualSaveMode() === 'another'"
+          loadingLabel="Adding item"
+          (clicked)="saveManualItem(true)"
+        >Save and add new</ui-button>
+        <ui-button
           variant="primary"
           [fullWidth]="true"
-          [disabled]="!manualName().trim()"
-          [loading]="savingManualItem()"
+          [disabled]="!manualName().trim() || savingManualItem()"
+          [loading]="manualSaveMode() === 'close'"
           loadingLabel="Adding item"
           (clicked)="saveManualItem()"
         >Add item</ui-button>
@@ -462,6 +486,7 @@ export class GroceriesPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(UiToastService);
   private loadSequence = 0;
+  private entryContextLoaded = false;
 
   protected readonly currentWeek = startOfMealPlanWeek(new Date());
   protected readonly selectedWeek = signal(
@@ -486,7 +511,9 @@ export class GroceriesPageComponent implements OnInit {
   private readonly manualCategoryAutomatic = signal(true);
   protected readonly manualDestinationId = signal<string | null>(null);
   protected readonly ingredientSuggestions = signal<IngredientSuggestion[]>([]);
-  protected readonly savingManualItem = signal(false);
+  private readonly categoryPreferenceByName = signal<ReadonlyMap<string, string>>(new Map());
+  protected readonly manualSaveMode = signal<'close' | 'another' | null>(null);
+  protected readonly savingManualItem = computed(() => this.manualSaveMode() !== null);
   protected readonly listDrawerOpen = signal(false);
   protected readonly newListName = signal('');
   protected readonly savingList = signal(false);
@@ -509,11 +536,12 @@ export class GroceriesPageComponent implements OnInit {
   private readonly ingredientCategoryByName = computed(
     () => new Map(
       this.ingredientSuggestions().map((ingredient) => [
-        ingredient.name.trim().toLocaleLowerCase(),
+        normalizeGroceryItemName(ingredient.name),
         ingredient.category
       ])
     )
   );
+  private readonly manualItemInput = viewChild<UiInputComponent>('manualItemInput');
 
   protected readonly selectedStartsOn = computed(() => toLocalDateKey(this.selectedWeek()));
   protected readonly weekNavigationLabel = computed(() =>
@@ -724,10 +752,7 @@ export class GroceriesPageComponent implements OnInit {
   }
 
   protected openManualItem(): void {
-    this.manualName.set('');
-    this.manualAmount.set('');
-    this.manualCategory.set('Other');
-    this.manualCategoryAutomatic.set(true);
+    this.resetManualItemFields();
     this.manualDestinationId.set(
       this.activeDestinationId() === 'all' ? null : this.activeDestinationId()
     );
@@ -766,6 +791,7 @@ export class GroceriesPageComponent implements OnInit {
       amountText: this.editAmount().trim() || null,
       destinationId: this.editDestinationId()
     };
+    const originalItem = this.board()?.items.find((item) => item.id === itemId);
 
     this.savingEditedItem.set(true);
     try {
@@ -789,6 +815,9 @@ export class GroceriesPageComponent implements OnInit {
           : board
       );
       this.editDrawerOpen.set(false);
+      if (originalItem?.sourceKind === 'manual') {
+        void this.rememberCategory(update.name, update.category);
+      }
     } catch (error) {
       this.error.set(this.errorMessage(error));
     } finally {
@@ -796,24 +825,43 @@ export class GroceriesPageComponent implements OnInit {
     }
   }
 
-  protected async saveManualItem(): Promise<void> {
+  protected async saveManualItem(addAnother = false): Promise<void> {
     if (!this.manualName().trim() || this.savingManualItem()) return;
-    this.savingManualItem.set(true);
+    const name = this.manualName();
+    const category = this.manualCategory();
+    const rememberCategory = !this.manualCategoryAutomatic();
+    this.manualSaveMode.set(addAnother ? 'another' : 'close');
     try {
       await this.groceries.addManualItem({
         startsOn: this.selectedStartsOn(),
-        name: this.manualName(),
-        category: this.manualCategory(),
+        name,
+        category,
         amountText: this.manualAmount(),
         destinationId: this.manualDestinationId()
       });
       this.board.set(await this.groceries.getWeek(this.selectedStartsOn()));
-      this.manualDrawerOpen.set(false);
+      if (rememberCategory) void this.rememberCategory(name, category);
+      if (addAnother) {
+        this.resetManualItemFields();
+        this.toast.success(`${name} added.`);
+      } else {
+        this.manualDrawerOpen.set(false);
+      }
     } catch (error) {
       this.error.set(this.errorMessage(error));
     } finally {
-      this.savingManualItem.set(false);
+      this.manualSaveMode.set(null);
+      if (addAnother && this.manualDrawerOpen()) {
+        window.requestAnimationFrame(() => this.manualItemInput()?.focus());
+      }
     }
+  }
+
+  private resetManualItemFields(): void {
+    this.manualName.set('');
+    this.manualAmount.set('');
+    this.manualCategory.set('Other');
+    this.manualCategoryAutomatic.set(true);
   }
 
   protected openListDrawer(): void {
@@ -880,6 +928,16 @@ export class GroceriesPageComponent implements OnInit {
     return this.board()?.destinations.find((destination) => destination.id === destinationId)?.name ?? null;
   }
 
+  protected itemMeta(item: GroceryItem): string | null {
+    const destination = this.activeDestinationId() === 'all'
+      ? this.destinationName(item.destinationId)
+      : null;
+    if (item.sourceKind === 'manual') {
+      return destination ? `${destination} · Added` : 'Added';
+    }
+    return destination;
+  }
+
   protected amount(item: GroceryItem): string | null {
     if (item.amountText) return item.amountText;
     const quantity = formatRecipeQuantity(item.quantity);
@@ -915,20 +973,50 @@ export class GroceriesPageComponent implements OnInit {
   }
 
   private async loadIngredientSuggestions(): Promise<void> {
-    if (this.ingredientSuggestions().length > 0) return;
-    try {
-      this.ingredientSuggestions.set(await this.groceries.listIngredientSuggestions());
-      if (this.manualDrawerOpen() && this.manualCategoryAutomatic()) {
-        this.manualCategory.set(this.inferredCategory(this.manualName()));
-      }
-    } catch {
-      // Suggestions are optional; item entry remains fully usable without them.
+    if (this.entryContextLoaded) return;
+    this.entryContextLoaded = true;
+
+    const [ingredientResult, preferenceResult] = await Promise.allSettled([
+      this.groceries.listIngredientSuggestions(),
+      this.groceries.listCategoryPreferences()
+    ]);
+    if (ingredientResult.status === 'fulfilled') {
+      this.ingredientSuggestions.set(ingredientResult.value);
+    }
+    if (preferenceResult.status === 'fulfilled') {
+      this.categoryPreferenceByName.set(new Map(
+        preferenceResult.value.map((preference) => [
+          preference.normalizedName,
+          preference.category
+        ])
+      ));
+    }
+    if (this.manualDrawerOpen() && this.manualCategoryAutomatic()) {
+      this.manualCategory.set(this.inferredCategory(this.manualName()));
     }
   }
 
   private inferredCategory(name: string): string {
-    const knownCategory = this.ingredientCategoryByName().get(name.trim().toLocaleLowerCase());
-    return inferGroceryCategory(name, knownCategory);
+    const normalizedName = normalizeGroceryItemName(name);
+    const knownCategory = this.ingredientCategoryByName().get(normalizedName);
+    const preferredCategory = this.categoryPreferenceByName().get(normalizedName);
+    return inferGroceryCategory(name, knownCategory, preferredCategory);
+  }
+
+  private async rememberCategory(name: string, category: string): Promise<void> {
+    const normalizedName = normalizeGroceryItemName(name);
+    if (!normalizedName) return;
+
+    try {
+      await this.groceries.saveCategoryPreference(normalizedName, category);
+      this.categoryPreferenceByName.update((current) => {
+        const next = new Map(current);
+        next.set(normalizedName, category);
+        return next;
+      });
+    } catch {
+      // Learning a correction must not block adding or editing the grocery item.
+    }
   }
 
   private resetViewState(): void {

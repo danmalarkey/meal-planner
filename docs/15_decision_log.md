@@ -8,6 +8,22 @@
 - Canonical references: `docs/07_grocery_model.md`, `supabase/migrations/20261116130000_include_seasonings_and_merge_qualitative_groceries.sql`, `supabase/migrations/20261116133000_reconcile_existing_grocery_weeks.sql`, `supabase/tests/grocery_generation_rules.sql`, `apps/web/src/app/pages/groceries/groceries-page.component.ts`
 - Follow-up trigger: Deploy and validate automatic reconciliation after the next meal-plan change. Revisit cross-unit conversion only when real recipes require it.
 
+## 2026-11-11 — Meal Planner uses dedicated Supabase and Cloudflare ownership
+
+- Status: Active — cutover complete; seven-day test period ends November 18, 2026
+- Decision: Meal Planner uses Supabase project `ugslkmbxnxtaukbwbdng` and the dedicated Cloudflare Worker at `https://meal-planner.meal-planner-app.workers.dev`. The default `workers.dev` URL remains until the product name and custom domain are settled. Keep the Catalist Worker and source Supabase project `mberdmpyvjylnmmlnpsc` as rollback resources through a seven-day testing period, then re-evaluate on November 18, 2026. Retirement is not automatic; delete the Worker first and delete the source database only with separate explicit approval.
+- Why it matters: Production data, Auth, Storage, frontend hosting, runtime variables, and deployment ownership are now isolated from Catalist while preserving a recoverable path through the local backup and temporary rollback resources.
+- Canonical references: `docs/16_infrastructure_handoff.md`, `docs/17_infrastructure_cleanup_plan.md`, `apps/web/wrangler.jsonc`, `supabase/README.md`
+- Follow-up trigger: Review the week of testing on November 18, 2026; proceed, extend the rollback period, or investigate. If proceeding, retire the Catalist Worker and redirect first, then separately approve source-project deletion. Purchase and attach a custom domain only after naming is settled.
+
+## 2026-11-11 — Current infrastructure separation snapshot
+
+- Status: Superseded by **Meal Planner uses dedicated Supabase and Cloudflare ownership** on 2026-11-11
+- Decision: Meal Planner is currently served by its own Cloudflare Worker and points to Supabase project `mberdmpyvjylnmmlnpsc`. The proposed next direction is dedicated Meal Planner infrastructure ownership, with a dedicated Supabase organization/project and a dedicated hosting project. Vercel is a candidate rather than a settled choice until its current commercial plan terms and cost are verified. Preserve the existing Cloudflare deployment and Supabase data until a replacement passes end-to-end acceptance.
+- Why it matters: The project can be separated from Catalist without losing household auth, recipes, meal plans, groceries, Storage objects, or the current working deployment, while avoiding an unaffordable or commercially incompatible hosting commitment.
+- Canonical references: `docs/16_infrastructure_handoff.md`, `apps/web/wrangler.jsonc`, `supabase/README.md`
+- Follow-up trigger: Resume by deciding whether the existing Supabase project can be transferred into dedicated ownership and whether Vercel's current terms fit a paid Meal Planner launch.
+
 ## 2026-11-09 — Recipes is the shared library and favorites are personal
 
 - Status: Active — implemented; hosted schema applied

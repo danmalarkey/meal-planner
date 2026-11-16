@@ -32,6 +32,11 @@ export interface IngredientSuggestion {
   category: string | null;
 }
 
+export interface GroceryCategoryPreference {
+  normalizedName: string;
+  category: string;
+}
+
 interface GroceryItemRow {
   id: string;
   name: string;
@@ -56,6 +61,7 @@ export class GroceryRepositoryService {
   private readonly client = inject<SupabaseClient | null>(SUPABASE_CLIENT, { optional: true });
   private readonly household = inject(HouseholdContextService);
   private ingredientSuggestionsPromise: Promise<IngredientSuggestion[]> | null = null;
+  private categoryPreferencesPromise: Promise<GroceryCategoryPreference[]> | null = null;
   private readonly weekByStartsOn = new Map<string, CachedGroceryWeek>();
   private readonly weekRequestByStartsOn = new Map<string, Promise<GroceryWeek>>();
 
@@ -63,6 +69,7 @@ export class GroceryRepositoryService {
     this.client?.auth.onAuthStateChange((event) => {
       if (event !== 'SIGNED_OUT') return;
       this.ingredientSuggestionsPromise = null;
+      this.categoryPreferencesPromise = null;
       this.weekByStartsOn.clear();
       this.weekRequestByStartsOn.clear();
     });
@@ -74,6 +81,31 @@ export class GroceryRepositoryService {
       throw error;
     });
     return this.ingredientSuggestionsPromise;
+  }
+
+  listCategoryPreferences(): Promise<GroceryCategoryPreference[]> {
+    this.categoryPreferencesPromise ??= this.loadCategoryPreferences().catch((error) => {
+      this.categoryPreferencesPromise = null;
+      throw error;
+    });
+    return this.categoryPreferencesPromise;
+  }
+
+  async saveCategoryPreference(normalizedName: string, category: string): Promise<void> {
+    const household = await this.household.get();
+    const { error } = await this.requiredClient()
+      .from('grocery_category_preferences')
+      .upsert(
+        {
+          household_id: household.id,
+          normalized_name: normalizedName,
+          category
+        },
+        { onConflict: 'household_id,normalized_name' }
+      );
+
+    if (error) throw error;
+    this.categoryPreferencesPromise = null;
   }
 
   getWeek(startsOn: string): Promise<GroceryWeek> {
@@ -337,6 +369,20 @@ export class GroceryRepositoryService {
       }
     }
     return [...suggestions.values()];
+  }
+
+  private async loadCategoryPreferences(): Promise<GroceryCategoryPreference[]> {
+    const household = await this.household.get();
+    const { data, error } = await this.requiredClient()
+      .from('grocery_category_preferences')
+      .select('normalized_name,category')
+      .eq('household_id', household.id);
+
+    if (error) throw error;
+    return (data ?? []).map((preference) => ({
+      normalizedName: preference.normalized_name as string,
+      category: preference.category as string
+    }));
   }
 
   private requiredClient(): SupabaseClient {

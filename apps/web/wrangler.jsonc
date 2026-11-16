@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "meal-planner",
+  "account_id": "fc5544f8cd9a5d9f8e6824a9ecdfdac1",
   "compatibility_date": "2026-11-08",
   "assets": {
     "directory": "./dist/meal-planner-web/browser",

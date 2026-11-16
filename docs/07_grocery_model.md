@@ -22,6 +22,8 @@ A board may receive items from its matching meal plan and may also contain manua
 
 Categories answer **what kind of item is this?** Examples include Produce, Meat, Dairy, Beverages, Pantry, and Household. The All items view groups items by category. Known ingredients inherit their stored category; manual entry may infer a category from recognizable names while keeping that field editable.
 
+Manual-item categorization is local-first. A compact catalog generated from Ingredient Atlas v0.1.2 metadata (CC0-1.0) supplies generic grocery and household aliases without a runtime third-party request. Item names are normalized to remove package quantities before matching. Household category corrections are stored in `grocery_category_preferences` and take precedence over both the catalog and ingredient defaults, so a correction made by one household member is reused for the other.
+
 Store destinations answer **where should we buy it?** Costco and Target are household-managed examples. Destinations persist across weeks, while an item's assignment belongs only to that week's grocery item.
 
 Deleting a store destination removes only the reusable list. Any grocery items assigned to it remain in their weekly **All items** view and become unassigned; deleting a list never deletes grocery items.

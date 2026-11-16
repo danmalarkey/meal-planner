@@ -14,10 +14,16 @@
 
 .grocery-list-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--control-height-md);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
   padding-block: var(--space-3);
+}
+
+.grocery-list-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .grocery-list-tabs {
@@ -140,9 +146,14 @@ button.grocery-item-copy {
   line-height: var(--line-height-tight);
 }
 
-.grocery-item-destination {
+.grocery-item-meta {
   color: var(--color-text-secondary);
   font-size: var(--font-size-caption);
+}
+
+.grocery-item-meta--manual {
+  color: var(--color-navigation-active);
+  font-weight: var(--font-weight-medium);
 }
 
 .grocery-item-amount {
@@ -211,6 +222,10 @@ button.grocery-item-copy {
   width: 100%;
 }
 
+.grocery-drawer-add-another {
+  display: none;
+}
+
 .grocery-move-options {
   display: grid;
 }
@@ -253,6 +268,10 @@ button.grocery-item-copy {
 
   .grocery-groups {
     margin-top: var(--space-5);
+  }
+
+  .grocery-drawer-add-another {
+    display: block;
   }
 
   .grocery-page--selecting {

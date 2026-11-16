@@ -2,6 +2,8 @@
 
 Meal Planner is a household-first meal-planning application built with Angular and Supabase.
 
+For the current infrastructure separation plan and exact restart checklist, start with [`docs/16_infrastructure_handoff.md`](docs/16_infrastructure_handoff.md).
+
 The repository currently contains a clean application shell, authentication foundation, reusable design system, and dormant Stripe billing infrastructure. Recipe, planning, grocery, and household domain models will be added deliberately rather than inherited from another product.
 
 ## Repository map
