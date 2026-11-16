@@ -1,5 +1,6 @@
 import {
   formatRecipeQuantity,
+  inferRecipeIngredientAmount,
   recipeScaleFactor,
   scaleRecipeIngredientLine,
   scaleRecipeQuantity
@@ -37,6 +38,28 @@ describe('recipe serving scaling', () => {
       '1 (1 inch) piece ginger root'
     );
     expect(scaleRecipeIngredientLine('about 6 cups water', 4, 2)).toBe('about 6 cups water');
+  });
+
+  it('infers and combines missing ingredient amounts from measured instruction lines', () => {
+    expect(inferRecipeIngredientAmount(
+      ['¼ tsp cinnamon, ground', '⅛ tsp cinnamon, ground'],
+      ['cinnamon, ground']
+    )).toEqual({ quantity: 0.375, unit: 'tsp' });
+    expect(inferRecipeIngredientAmount(
+      ['1 tsp cinnamon'],
+      ['cinnamon, ground']
+    )).toEqual({ quantity: 1, unit: 'tsp' });
+  });
+
+  it('leaves incompatible or qualitative instruction amounts unresolved', () => {
+    expect(inferRecipeIngredientAmount(
+      ['1 tbsp salt', '½ tsp salt'],
+      ['salt']
+    )).toBeNull();
+    expect(inferRecipeIngredientAmount(
+      ['about 2 tbsp olive oil'],
+      ['olive oil']
+    )).toBeNull();
   });
 
   it('rejects invalid serving bases and quantities', () => {

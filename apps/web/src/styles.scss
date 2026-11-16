@@ -528,19 +528,19 @@ h3 {
   box-shadow: var(--shadow-sm);
 }
 
-.recipe-ingredient-list {
+.recipe-ingredient-list,
+.recipe-cookware-list {
   display: grid;
-  gap: var(--space-2);
+  gap: 0;
   padding-left: 0;
   margin: var(--space-4) 0 0;
   list-style: none;
 }
 
-.recipe-cookware-list {
-  display: grid;
-  gap: var(--space-2);
-  padding-left: var(--space-4);
-  margin: var(--space-4) 0 0;
+.recipe-ingredient-list li,
+.recipe-cookware-list li {
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-default);
 }
 
 .recipe-ingredient-list li {
@@ -550,8 +550,14 @@ h3 {
   gap: var(--space-3);
 }
 
-.recipe-cookware-list li {
-  padding-left: var(--space-1);
+.recipe-ingredient-list li:first-child,
+.recipe-cookware-list li:first-child {
+  padding-top: var(--space-2);
+}
+
+.recipe-ingredient-list li:last-child,
+.recipe-cookware-list li:last-child {
+  border-bottom: 0;
 }
 
 .recipe-ingredient-amount {
@@ -888,25 +894,11 @@ h3 {
 
   .recipe-ingredient-list,
   .recipe-cookware-list {
-    gap: 0;
-    padding-left: 0;
     margin-top: 0;
-    list-style: none;
   }
 
   .recipe-step-list {
     margin-top: 0;
-  }
-
-  .recipe-ingredient-list li,
-  .recipe-cookware-list li {
-    padding: var(--space-3) 0;
-    border-bottom: var(--border-default);
-  }
-
-  .recipe-ingredient-list li:first-child,
-  .recipe-cookware-list li:first-child {
-    padding-top: var(--space-2);
   }
 
   .recipe-mobile-action {

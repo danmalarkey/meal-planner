@@ -18,6 +18,7 @@ import {
 } from '../../core/recipes/recipe-repository.service';
 import {
   formatRecipeQuantity,
+  inferRecipeIngredientAmount,
   scaleRecipeIngredientLine,
   scaleRecipeQuantity,
   SupportedRecipeServings
@@ -395,15 +396,21 @@ export class RecipeDetailPageComponent implements OnInit {
   }
 
   protected ingredientAmount(ingredient: RecipeIngredient, recipe: RecipeDetail): string | null {
+    const inferred = ingredient.normalizedQuantity === null
+      ? inferRecipeIngredientAmount(
+          recipe.steps.flatMap((step) => step.ingredientLines),
+          [ingredient.displayText, ingredient.ingredientName]
+        )
+      : null;
     const scaled = scaleRecipeQuantity(
-      ingredient.normalizedQuantity,
+      ingredient.normalizedQuantity ?? inferred?.quantity ?? null,
       recipe.baseServings,
       this.selectedServings()
     );
     const quantity = formatRecipeQuantity(scaled);
     if (!quantity) return null;
 
-    const unit = this.displayUnit(ingredient.normalizedUnit, scaled);
+    const unit = this.displayUnit(ingredient.normalizedUnit ?? inferred?.unit ?? null, scaled);
     return [quantity, unit].filter(Boolean).join(' ');
   }
 

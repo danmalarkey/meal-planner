@@ -25,6 +25,22 @@ const CONVERSION_QUANTITY_PATTERN = new RegExp(
   `^(\\s+[^()]*(?:[A-Za-z])[^()]*)\\(((${QUANTITY_PATTERN})(?=\\s)[^)]*)\\)`,
   'u'
 );
+const INSTRUCTION_UNIT_ALIASES: Readonly<Record<string, string>> = {
+  teaspoon: 'tsp',
+  teaspoons: 'tsp',
+  tablespoon: 'tbsp',
+  tablespoons: 'tbsp',
+  cups: 'cup',
+  ounce: 'oz',
+  ounces: 'oz',
+  pound: 'lb',
+  pounds: 'lb'
+};
+
+export interface RecipeIngredientAmount {
+  quantity: number;
+  unit: string | null;
+}
 
 export function recipeScaleFactor(
   baseServings: number,
@@ -71,6 +87,49 @@ export function formatRecipeQuantity(quantity: number | null): string | null {
     maximumFractionDigits: 2,
     useGrouping: false
   }).format(quantity);
+}
+
+export function inferRecipeIngredientAmount(
+  ingredientLines: readonly string[],
+  ingredientNames: readonly string[]
+): RecipeIngredientAmount | null {
+  const aliases = [...new Set(
+    ingredientNames.flatMap((name) => {
+      const normalized = name.trim().toLocaleLowerCase();
+      if (!normalized) return [];
+      const baseName = normalized.replace(/,\s*[^,]+$/, '').trim();
+      return baseName && baseName !== normalized ? [normalized, baseName] : [normalized];
+    })
+  )].sort((left, right) => right.length - left.length);
+  const amounts: RecipeIngredientAmount[] = [];
+
+  for (const line of ingredientLines) {
+    const trimmedLine = line.trim();
+    const normalizedLine = trimmedLine.toLocaleLowerCase();
+    const alias = aliases.find((candidate) =>
+      normalizedLine === candidate || normalizedLine.endsWith(` ${candidate}`)
+    );
+    if (!alias) continue;
+
+    const amountText = trimmedLine.slice(0, -alias.length).trim();
+    const quantityMatch = amountText.match(LEADING_QUANTITY_PATTERN);
+    if (!quantityMatch) continue;
+
+    const rawUnit = amountText.slice(quantityMatch[1].length).trim().toLocaleLowerCase();
+    amounts.push({
+      quantity: parseDisplayQuantity(quantityMatch[1]),
+      unit: rawUnit ? INSTRUCTION_UNIT_ALIASES[rawUnit] ?? rawUnit : null
+    });
+  }
+
+  if (amounts.length === 0 || new Set(amounts.map((amount) => amount.unit)).size !== 1) {
+    return null;
+  }
+
+  return {
+    quantity: amounts.reduce((total, amount) => total + amount.quantity, 0),
+    unit: amounts[0].unit
+  };
 }
 
 export function scaleRecipeIngredientLine(
