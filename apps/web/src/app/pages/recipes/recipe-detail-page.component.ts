@@ -75,16 +75,17 @@ import { UiToastService } from '../../ui/toast/ui-toast.service';
             } @else {
               <div class="recipe-detail-image-placeholder" aria-hidden="true">Recipe</div>
             }
-            <app-recipe-favorite-button
-              class="recipe-detail-favorite-control"
-              [recipeTitle]="currentRecipe.title"
-              [favorite]="currentRecipe.isFavorite"
-              [pending]="favoritePending()"
-              (favoriteChange)="setFavorite($event)"
-            ></app-recipe-favorite-button>
           </div>
           <div class="recipe-detail-heading">
-            <h1>{{ currentRecipe.title }}</h1>
+            <div class="recipe-detail-title">
+              <h1>{{ currentRecipe.title }}</h1>
+              <app-recipe-favorite-button
+                [recipeTitle]="currentRecipe.title"
+                [favorite]="currentRecipe.isFavorite"
+                [pending]="favoritePending()"
+                (favoriteChange)="setFavorite($event)"
+              ></app-recipe-favorite-button>
+            </div>
             <div class="recipe-detail-meta">
               @if (currentRecipe.minutes) {
                 <span>{{ currentRecipe.minutes }} minutes</span>
